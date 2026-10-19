@@ -31,7 +31,7 @@ export async function probarTodas(soloId) {
     let ctl;
     try {
       ctl = montarEscenario(cont, { plantilla: p, titulo: ej.titulo, tipo, datos, opciones: act.opciones, estilo: ej.estilo || 'clasico', fuente: 'auto', alTerminar: null });
-      ctl.escenario.querySelector('.esc-iniciar').click();
+      ctl.escenario.querySelector('.esc-iniciar:not(.esc-avance-b)').click();
       await esperar(120);
       // clics aleatorios sobre elementos interactivos
       for (let i = 0; i < 6; i++) {
@@ -56,7 +56,7 @@ export async function probarTodas(soloId) {
     try {
       if (!tipo || !datos || cuenta(tipo, datos) < (p.minimo || 1)) { informe.push({ id: 'ejemplo:' + ej.id, estado: 'contenido insuficiente para ' + p.id }); continue; }
       ctl = montarEscenario(cont, { plantilla: p, titulo: ej.titulo, tipo, datos, opciones: act.opciones, estilo: ej.estilo, fuente: 'auto', alTerminar: null });
-      ctl.escenario.querySelector('.esc-iniciar').click(); await esperar(150);
+      ctl.escenario.querySelector('.esc-iniciar:not(.esc-avance-b)').click(); await esperar(150);
       const err = ctl.escenario.querySelector('.esc-error');
       informe.push({ id: 'ejemplo:' + ej.id, estado: err || errores.length ? 'ERROR' : 'ok', detalle: err ? err.textContent : errores.join(' | ') || undefined });
     } catch (e) { informe.push({ id: 'ejemplo:' + ej.id, estado: 'EXCEPCION', detalle: String(e).slice(0, 200) }); }

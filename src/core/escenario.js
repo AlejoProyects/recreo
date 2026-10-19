@@ -10,7 +10,20 @@ import { codificar } from './codec.js';
 // pantalla de inicio, la barra (tiempo, vidas, puntos), el área de juego y la
 // pantalla final. La plantilla recibe un `host` y devuelve {destruir?, alAgotarTiempo?}.
 // ---------------------------------------------------------------------------
-export function montarEscenario(cont, { plantilla, titulo, tipo, datos, opciones, estilo, fuente, alTerminar, tarea = null }) {
+function listaContenido(tipo, d) {
+  const li = (t, hijos) => el('li', {}, hijos ? [t, hijos] : [t]);
+  const ul = (items, ord) => el(ord ? 'ol' : 'ul', { class: 'avance-lista' }, items);
+  if (tipo === 'quiz') return ul(d.map((q) => li(q.q || '(imagen)', ul(q.resp.map((r) => li((r.ok ? '\u2714 ' : '\u2022 ') + r.t))))), true);
+  if (tipo === 'pares') return ul(d.map((x) => li(`${x.a || '(imagen)'}  \u2192  ${x.b || '(imagen)'}`)));
+  if (tipo === 'grupos') return ul(d.map((g) => li(g.nombre + ': ' + g.items.map((i) => i.t || '(imagen)').join(', '))));
+  if (tipo === 'vf') return ul(d.map((x) => li(`[${x.ok ? 'Verdadero' : 'Falso'}] ${x.t}`)));
+  if (tipo === 'oraciones') return ul(d.map((x) => li(x.t)), true);
+  if (tipo === 'mates') return el('p', { text: `Operaciones ${d.ops.join(' ')} con números hasta ${d.max}; ${d.n} preguntas nuevas en cada partida.` });
+  if (tipo === 'diagrama') return ul(d.pins.map((p, i) => li(`${i + 1}. ${p.t}`)));
+  return ul(d.map((x) => li(x.t || '(imagen)')));
+}
+
+export function montarEscenario(cont, { plantilla, titulo, tipo, datos, opciones, estilo, fuente, alTerminar, alIniciar = null, tarea = null }) {
   const raiz = el('div', { class: 'escenario' });
   const barra = el('div', { class: 'esc-barra', attrs: { hidden: true } });
   const area = el('div', { class: 'esc-juego' });
@@ -109,9 +122,18 @@ export function montarEscenario(cont, { plantilla, titulo, tipo, datos, opciones
       el('div', { class: 'esc-inicio-pl', text: plantilla.nombre }),
       el('h2', { class: 'esc-inicio-ti', text: titulo }),
       campoNombre,
-      el('button', { class: 'esc-iniciar', on: { click: iniciar } }, [el('span', { class: 'tri', text: '▶' }), el('b', { text: 'INICIAR' })]),
+      el('div', { class: 'esc-inicio-bot' }, [
+        el('button', { class: 'esc-iniciar esc-avance-b', on: { click: avance } }, [el('span', { class: 'tri', text: '\u{1F441}' }), el('b', { text: 'Avance' })]),
+        el('button', { class: 'esc-iniciar', on: { click: iniciar } }, [el('span', { class: 'tri', text: '▶' }), el('b', { text: 'Juego' })])
+      ]),
       el('p', { class: 'esc-inicio-de', text: plantilla.descripcion })
     ].filter(Boolean));
+  }
+
+  // Vista previa del contenido (sin jugar).
+  function avance() {
+    limpiar(capa); capa.className = 'esc-capa esc-avance';
+    capa.append(el('h3', { text: 'Avance: ' + titulo }), listaContenido(tipo, datos), el('button', { class: 'esc-btn-grande', text: 'Volver', on: { click: inicio } }));
   }
 
   function arrancar() {
@@ -121,6 +143,7 @@ export function montarEscenario(cont, { plantilla, titulo, tipo, datos, opciones
     pintarStats(); elProgreso.textContent = '';
     limpiar(area);
     t0 = Date.now();
+    if (alIniciar) alIniciar();
     try { juego = plantilla.montar(host) || {}; }
     catch (e) { console.error(e); area.append(el('p', { class: 'esc-error', text: 'No se pudo iniciar: ' + e.message })); juego = {}; }
     reloj();

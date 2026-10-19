@@ -40,6 +40,7 @@ function construir(raiz, act, { modo }) {
     }
     ctl = montarEscenario(zonaJuego, {
       plantilla, titulo: act.titulo, tipo, datos, opciones: act.opciones, estilo: act.estilo, fuente: act.fuente, tarea: act.tarea || null,
+      alIniciar: () => { if (propia) { act.jugado = Date.now(); actividades.guardar(act); } },
       alTerminar: async (r) => {
         const reg = { id: uid(), actId: act.tarea ? act.tarea.id : act.id, titulo: act.titulo, plantilla: plantilla.id, fecha: Date.now(), ...r };
         await resultados.guardar(reg); pintarTabla();
@@ -106,7 +107,7 @@ function construir(raiz, act, { modo }) {
             el('h1', { text: act.titulo }),
             act.tarea ? null : el('div', { class: 'fila' }, [
               el('button', { class: 'btn btn-claro', text: '✔ Definir tarea', on: { click: () => definirTarea(act) } }),
-              el('button', { class: 'btn btn-claro', text: '🌐 Compartir', on: { click: () => compartir(act) } })
+              el('button', { class: 'btn btn-claro', text: '🌐 Compartir', on: { click: () => compartir(act, { propia, alGuardar: () => { const h1 = document.querySelector('.info h1'); if (h1) h1.textContent = act.titulo; } }) } })
             ])
           ]),
           el('div', { class: 'fila entre' }, [

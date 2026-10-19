@@ -308,3 +308,12 @@
 .plano-p { padding: .3em; font-weight: 800; min-height: 2.6em; display: flex; align-items: center; justify-content: center; text-align: center; }
 .plano-p.vacio { opacity: .35; border-style: dashed; } .plano-p.sel { box-shadow: 0 0 0 4px var(--e-acento); }
 .plano-bot { display: flex; gap: .8em; justify-content: center; }
+
+/* Avance (vista previa) */
+.esc-inicio-bot { display: flex; gap: .8em; }
+.esc-avance-b { background: #1f2933; border: 2px solid #4b5b68; }
+.esc-avance-b:hover { background: #33424f; }
+.esc-avance { justify-content: flex-start; overflow: auto; text-align: left; align-items: stretch; gap: .5em; padding: 1.2em 2em; }
+.esc-avance h3 { font-size: 1.5em; text-align: center; }
+.avance-lista { padding-left: 1.4em; display: grid; gap: .25em; } .avance-lista .avance-lista { margin-top: .2em; list-style: none; padding-left: .8em; opacity: .9; font-size: .9em; }
+.esc-avance .esc-btn-grande { align-self: center; }
