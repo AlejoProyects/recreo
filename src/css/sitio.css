@@ -81,3 +81,4 @@ textarea { resize: vertical; min-height: 44px; }
 }
 .cab nav a, .logo { white-space: nowrap; }
 .cab nav a.btn { color: #fff; }
+.fila select { width: auto; }

@@ -4,16 +4,17 @@ import { el, limpiar, sinAcentos } from '../core/util.js';
 import { pagina } from './layout.js';
 import { PLANTILLAS } from '../plantillas.js';
 import { ir } from '../core/router.js';
+import { ilustracion } from './ilustraciones.js';
 
 export const pasos = (n) => el('ol', { class: 'pasos-barra' }, ['Elige una plantilla', 'Introduce el contenido', 'Juega'].map((t, i) =>
   el('li', { class: i + 1 === n ? 'act' : i + 1 < n ? 'hecho' : '' }, [el('b', { text: String(i + 1) }), t])));
 
 export function iconoPlantilla(p) {
-  return el('span', { class: 'plt-ico', style: { '--c': p.color }, text: p.icono });
+  return el('span', { class: 'plt-ico', html: ilustracion(p.id) });
 }
 
-export function tarjetaPlantilla(p, onClick) {
-  return el('a', { class: 'plt', attrs: { href: '#/crear/' + p.id }, on: onClick ? { click: (e) => { e.preventDefault(); onClick(p); } } : {} }, [
+export function tarjetaPlantilla(p, onClick, grande = false) {
+  return el('a', { class: 'plt' + (grande ? ' plt-grande' : ''), attrs: { href: '#/crear/' + p.id }, on: onClick ? { click: (e) => { e.preventDefault(); onClick(p); } } : {} }, [
     iconoPlantilla(p),
     el('span', { class: 'plt-t' }, [el('b', { text: p.nombre }), el('small', { text: p.descripcion })])
   ]);
@@ -22,7 +23,7 @@ export function tarjetaPlantilla(p, onClick) {
 export function vistaCrear(raiz) {
   const main = pagina(raiz);
   let orden = 'rec', q = '';
-  const lista = el('div', { class: 'plantillas-grid' });
+  const lista = el('div', { class: 'plantillas-grid grandes' });
   const buscar = el('input', { attrs: { type: 'search', placeholder: 'Buscar plantillas…' }, on: { input: (e) => { q = e.target.value; pintar(); } } });
   const selOrden = el('select', { on: { change: (e) => { orden = e.target.value; pintar(); } } }, [
     el('option', { attrs: { value: 'rec' }, text: 'Recomendadas' }), el('option', { attrs: { value: 'alfa' }, text: 'Alfabético' })]);
@@ -33,7 +34,7 @@ export function vistaCrear(raiz) {
     let l = PLANTILLAS.filter((p) => !f || sinAcentos(p.nombre + ' ' + p.descripcion).toLowerCase().includes(f));
     if (orden === 'alfa') l = l.slice().sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
     if (!l.length) lista.append(el('p', { class: 'sub', text: 'No hay plantillas que coincidan.' }));
-    l.forEach((p) => lista.append(tarjetaPlantilla(p)));
+    l.forEach((p) => lista.append(tarjetaPlantilla(p, null, true)));
   }
   main.append(
     pasos(1),
