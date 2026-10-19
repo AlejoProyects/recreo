@@ -1,0 +1,83 @@
+:root {
+  --azul: #2ea8f5; --azul-osc: #1d8fd8; --azul-claro: #e6f4fd;
+  --tinta: #1f2933; --gris: #6b7782; --linea: #d5dde3; --blanco: #fff;
+  --ok: #2fa84f; --mal: #e0473b;
+  font-family: 'Nunito', 'Segoe UI', system-ui, sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { color: var(--tinta); background: linear-gradient(#bfe3f4 0, #dcf0f9 320px, #eef6fa 700px) fixed no-repeat #eef6fa; min-height: 100vh; font-size: 16px; line-height: 1.5; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+a { color: var(--azul-osc); text-decoration: none; }
+a:hover { text-decoration: underline; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+h1, h2, h3 { line-height: 1.2; font-weight: 800; letter-spacing: -.01em; }
+h1 { font-size: 34px; } h2 { font-size: 26px; } h3 { font-size: 19px; }
+
+/* Cabecera */
+.cab { background: #fff; height: 66px; display: flex; align-items: center; gap: 22px; padding: 0 28px; border-bottom: 1px solid #d3e3ec; position: sticky; top: 0; z-index: 20; }
+.logo { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 25px; color: #1f2933; letter-spacing: -.03em; }
+.logo:hover { text-decoration: none; }
+.logo i { width: 28px; height: 28px; border-radius: 6px; background: var(--azul); display: grid; grid-template-columns: 1fr 1fr; gap: 3px; padding: 5px; }
+.logo i b { background: #fff; border-radius: 2px; }
+.lema { color: var(--gris); font-size: 15px; }
+.cab .esp { flex: 1; }
+.cab nav { display: flex; align-items: center; gap: 24px; }
+.cab nav a { color: var(--tinta); font-size: 17px; }
+.cab nav a.act { color: var(--azul-osc); font-weight: 800; }
+.cab .btn-menu { display: none; }
+
+/* Estructura */
+.contenedor { max-width: 1240px; margin: 0 auto; padding: 18px 20px 60px; }
+.tarjeta { background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.18); padding: 24px 30px; margin-bottom: 18px; }
+.tarjeta > h2:first-child, .tarjeta > h3:first-child { margin-bottom: 14px; }
+.sub { color: var(--gris); }
+.fila { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.fila.entre { justify-content: space-between; }
+.esp { flex: 1; }
+
+/* Botones */
+.btn { background: var(--azul); color: #fff; border: 1px solid var(--azul-osc); padding: 10px 22px; border-radius: 2px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; text-decoration: none; }
+.btn:hover { background: var(--azul-osc); text-decoration: none; }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.btn-claro { background: #fff; color: var(--tinta); border: 1px solid #8a959e; font-weight: 600; }
+.btn-claro:hover { background: #f1f5f8; }
+.btn-peligro { background: #fff; color: var(--mal); border: 1px solid var(--mal); }
+.btn-peligro:hover { background: #fdeceb; }
+.btn-mini { padding: 5px 12px; font-size: 14px; }
+.btn-grande { padding: 14px 34px; font-size: 19px; }
+.enlace-btn { background: none; border: none; color: var(--gris); display: inline-flex; gap: 6px; align-items: center; padding: 6px 8px; font-size: 16px; }
+.enlace-btn:hover { color: var(--azul-osc); }
+
+/* Formularios */
+label.campo { display: block; font-weight: 700; margin-bottom: 4px; }
+input[type=text], input[type=search], input[type=number], textarea, select { width: 100%; padding: 9px 11px; border: 1px solid #b6c2cb; border-radius: 2px; background: #fff; }
+input:focus, textarea:focus, select:focus { outline: 2px solid var(--azul); border-color: var(--azul); }
+textarea { resize: vertical; min-height: 44px; }
+
+/* Insignias */
+.etiqueta { display: inline-block; border: 1px solid #b6c2cb; padding: 1px 9px; font-size: 14px; background: #f6f8fa; margin: 0 6px 4px 0; }
+
+/* Aviso */
+.aviso { position: fixed; left: 50%; bottom: 28px; transform: translate(-50%, 20px); background: #1f2933; color: #fff; padding: 10px 20px; border-radius: 4px; opacity: 0; transition: .25s; z-index: 200; }
+.aviso.visible { opacity: 1; transform: translate(-50%, 0); }
+
+/* Modal */
+.modal-fondo { position: fixed; inset: 0; background: rgba(15,30,40,.55); z-index: 100; display: grid; place-items: center; padding: 18px; }
+.modal { background: #fff; max-width: 640px; width: 100%; max-height: 90vh; overflow: auto; padding: 26px 30px; box-shadow: 0 10px 40px rgba(0,0,0,.35); }
+.modal h2 { margin-bottom: 14px; }
+.modal .acciones { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; flex-wrap: wrap; }
+
+.confeti { position: fixed; inset: 0; pointer-events: none; z-index: 150; }
+.pie { background: #fff; border-top: 1px solid #d3e3ec; padding: 26px 28px; color: var(--gris); font-size: 14px; display: flex; gap: 24px; flex-wrap: wrap; }
+
+@media (max-width: 800px) {
+  .cab { padding: 8px 14px; gap: 6px 10px; height: auto; flex-wrap: wrap; position: static; } .lema, .cab .esp { display: none; }
+  .cab nav { gap: 14px; width: 100%; overflow-x: auto; padding-bottom: 4px; } .cab nav a { font-size: 15px; }
+  .cab nav a.btn { padding: 6px 14px; }
+  .tarjeta { padding: 18px 16px; } h1 { font-size: 27px; }
+}
+.cab nav a, .logo { white-space: nowrap; }
+.cab nav a.btn { color: #fff; }

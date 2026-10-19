@@ -1,0 +1,148 @@
+'use strict';
+
+import { el, limpiar, aviso, uid, fmtTiempo } from '../core/util.js';
+import { pagina } from './layout.js';
+import { plantillaPorId } from '../plantillas.js';
+import { montarEscenario } from '../core/escenario.js';
+import { contenidoParaJugar, cuenta } from '../core/contenido.js';
+import { actividades, resultados } from '../core/almacen.js';
+import { valoresPorDefecto } from '../juegos/ayudas.js';
+import { panelPlantillas, panelEstilo, panelOpciones } from './selectores.js';
+import { ir } from '../core/router.js';
+import { compartir, incrustar, imprimir, definirTarea } from './acciones.js';
+import { decodificar, paquete } from '../core/codec.js';
+import { EJEMPLOS } from '../datos/ejemplos.js';
+import { copiarActividad } from './mis.js';
+
+const conDefectos = (a) => {
+  const p = plantillaPorId(a.plantilla);
+  return { etiquetas: [], fuente: 'auto', estilo: 'clasico', ...a, opciones: { ...valoresPorDefecto(p && p.opciones), ...(a.opciones || {}) } };
+};
+
+// Construye la página de una actividad. modo: 'propia' | 'ajena' (ejemplo o recibida por enlace)
+function construir(raiz, act, { modo }) {
+  const main = pagina(raiz);
+  const propia = modo === 'propia';
+  let plantilla = plantillaPorId(act.plantilla);
+  let ctl = null;
+  const zonaJuego = el('div', { class: 'juego-zona' });
+  const lateral = el('aside', { class: 'lateral' });
+  const tabla = el('div', { class: 'tarjeta' });
+  const guardar = () => { if (propia) { act.modificado = Date.now(); return actividades.guardar(act); } };
+
+  function montar() {
+    if (ctl) ctl.destruir();
+    limpiar(zonaJuego);
+    const { tipo, datos } = contenidoParaJugar(plantilla, act);
+    if (!tipo || !datos || cuenta(tipo, datos) < (plantilla.minimo || 1)) {
+      zonaJuego.append(el('div', { class: 'juego-vacio' }, [el('p', { text: `Esta plantilla necesita al menos ${plantilla.minimo || 1} elemento(s) y el contenido actual no alcanza.` }), propia ? el('a', { class: 'btn', text: 'Editar contenido', attrs: { href: '#/editar/' + act.id } }) : null]));
+      ctl = null; return;
+    }
+    ctl = montarEscenario(zonaJuego, {
+      plantilla, titulo: act.titulo, tipo, datos, opciones: act.opciones, estilo: act.estilo, fuente: act.fuente, tarea: act.tarea || null,
+      alTerminar: async (r) => {
+        const reg = { id: uid(), actId: act.tarea ? act.tarea.id : act.id, titulo: act.titulo, plantilla: plantilla.id, fecha: Date.now(), ...r };
+        await resultados.guardar(reg); pintarTabla();
+        return reg;
+      }
+    });
+  }
+
+  function cambiarPlantilla(p) {
+    plantilla = p; act.plantilla = p.id;
+    act.opciones = { ...valoresPorDefecto(p.opciones), ...Object.fromEntries(Object.entries(act.opciones || {}).filter(([k]) => (p.opciones || []).some((o) => o.k === k))) };
+    guardar(); montar(); pintarLateral();
+  }
+  function pintarLateral() {
+    limpiar(lateral);
+    lateral.append(
+      panelPlantillas(act, cambiarPlantilla),
+      panelEstilo(act, () => { guardar(); if (ctl) ctl.setEstilo(act.estilo, act.fuente); }),
+      panelOpciones(plantilla, act, () => { guardar(); if (ctl) { ctl.setOpciones(act.opciones); ctl.reiniciar(); } })
+    );
+  }
+  async function pintarTabla() {
+    limpiar(tabla);
+    const idRes = act.tarea ? act.tarea.id : act.id;
+    const todos = (await resultados.todos()).filter((r) => r.actId === idRes).sort((a, b) => b.puntos - a.puntos || a.segundos - b.segundos).slice(0, 10);
+    tabla.append(el('h3', { text: 'Tabla de clasificación' }));
+    if (!todos.length) { tabla.append(el('p', { class: 'sub', text: 'Todavía no hay resultados en este dispositivo. ¡Juega y guarda el tuyo!' })); return; }
+    tabla.append(el('table', { class: 'tabla' }, [
+      el('thead', {}, [el('tr', {}, ['Puesto', 'Nombre', 'Puntuación', 'Tiempo'].map((t) => el('th', { text: t })))]),
+      el('tbody', {}, todos.map((r, i) => el('tr', {}, [el('td', { text: String(i + 1) }), el('td', { text: r.nombre }), el('td', { text: String(r.puntos) }), el('td', { text: fmtTiempo(r.segundos) })])))
+    ]));
+  }
+
+  const aviso_ajena = !propia ? el('div', { class: 'aviso-ajena' }, [
+    el('span', { text: act.tarea ? 'Esta es una tarea. Escribe tu nombre y pulsa INICIAR.' : 'Esta actividad es de la comunidad o te la han compartido.' }),
+    el('button', { class: 'btn btn-mini', text: 'Guardar una copia para editarla', on: { click: async () => { const c = await copiarActividad(conDefectos({ ...paquete(act), id: uid() })); aviso('Copia guardada en Mis actividades'); ir('/editar/' + c.id); } } })
+  ]) : null;
+
+  main.append(el('div', { class: 'actividad' }, [
+    el('div', { class: 'col-juego' }, [
+      aviso_ajena,
+      el('div', { class: 'tarjeta tarjeta-juego' }, [
+        zonaJuego,
+        el('div', { class: 'info' }, [
+          el('div', { class: 'fila entre' }, [
+            el('h1', { text: act.titulo }),
+            act.tarea ? null : el('div', { class: 'fila' }, [
+              el('button', { class: 'btn btn-claro', text: '✔ Definir tarea', on: { click: () => definirTarea(act) } }),
+              el('button', { class: 'btn btn-claro', text: '🌐 Compartir', on: { click: () => compartir(act) } })
+            ])
+          ]),
+          el('div', { class: 'fila entre' }, [
+            el('div', {}, [el('p', { class: 'sub', text: modo === 'propia' ? 'por Yo' : act.tarea ? 'Tarea' : 'Actividad de la comunidad' }), el('div', {}, (act.etiquetas || []).map((t) => el('span', { class: 'etiqueta', text: t })))]),
+            el('div', { class: 'fila acc' }, [
+              propia ? el('a', { class: 'enlace-btn', text: '✎ Editar contenido…', attrs: { href: '#/editar/' + act.id } }) : null,
+              el('button', { class: 'enlace-btn', text: '🖨 Imprimir', on: { click: () => imprimir(act, plantilla) } }),
+              act.tarea ? null : el('button', { class: 'enlace-btn', text: '</> Incrustar', on: { click: () => incrustar(act) } })
+            ])
+          ])
+        ])
+      ]),
+      tabla
+    ]),
+    lateral
+  ]));
+  montar(); pintarLateral(); pintarTabla();
+  return () => { if (ctl) ctl.destruir(); };
+}
+
+export async function vistaActividad(raiz, params) {
+  const act = await actividades.uno(params.id);
+  if (!act) {
+    const main = pagina(raiz);
+    main.append(el('div', { class: 'tarjeta' }, [el('h2', { text: 'Actividad no encontrada' }), el('p', { class: 'sub', text: 'Puede que se haya eliminado o que sea de otro dispositivo.' }), el('a', { class: 'btn', text: 'Ir a mis actividades', attrs: { href: '#/mis' } })]));
+    return;
+  }
+  return construir(raiz, conDefectos(act), { modo: 'propia' });
+}
+
+export function vistaEjemplo(raiz, params) {
+  const e = EJEMPLOS.find((x) => x.id === params.id);
+  if (!e) { ir('/comunidad'); return; }
+  return construir(raiz, conDefectos(JSON.parse(JSON.stringify(e))), { modo: 'ajena' });
+}
+
+async function leer(data) {
+  try { const d = await decodificar(data); if (!plantillaPorId(d.plantilla)) throw 0; return conDefectos({ id: d.tarea ? d.tarea.id : 'rec-' + data.slice(0, 12), ...d }); }
+  catch (_) { return null; }
+}
+
+export async function vistaCompartida(raiz, params) {
+  const act = await leer(params.data);
+  if (!act) { const m = pagina(raiz); m.append(el('div', { class: 'tarjeta' }, [el('h2', { text: 'Enlace no válido' }), el('p', { class: 'sub', text: 'El enlace está incompleto o dañado. Pide que te lo envíen de nuevo.' })])); return; }
+  return construir(raiz, act, { modo: 'ajena' });
+}
+
+// Incrustada: solo el escenario, sin cabecera ni pie.
+export async function vistaIncrustada(raiz, params) {
+  const act = await leer(params.data);
+  raiz.classList.add('embebida');
+  if (!act) { raiz.textContent = 'Enlace no válido'; return; }
+  const p = plantillaPorId(act.plantilla);
+  const { tipo, datos } = contenidoParaJugar(p, act);
+  const ctl = montarEscenario(raiz, { plantilla: p, titulo: act.titulo, tipo, datos, opciones: act.opciones, estilo: act.estilo, fuente: act.fuente, alTerminar: null });
+  return () => ctl.destruir();
+}

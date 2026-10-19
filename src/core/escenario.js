@@ -1,0 +1,178 @@
+'use strict';
+
+import { el, limpiar, fmtTiempo } from './util.js';
+import { aplicarEstilo } from './estilos.js';
+import * as sonido from './audio.js';
+import { codificar } from './codec.js';
+
+// ---------------------------------------------------------------------------
+// Escenario: el "reproductor" que envuelve a cualquier plantilla. Pinta la
+// pantalla de inicio, la barra (tiempo, vidas, puntos), el área de juego y la
+// pantalla final. La plantilla recibe un `host` y devuelve {destruir?, alAgotarTiempo?}.
+// ---------------------------------------------------------------------------
+export function montarEscenario(cont, { plantilla, titulo, tipo, datos, opciones, estilo, fuente, alTerminar, tarea = null }) {
+  const raiz = el('div', { class: 'escenario' });
+  const barra = el('div', { class: 'esc-barra', attrs: { hidden: true } });
+  const area = el('div', { class: 'esc-juego' });
+  const ctl = el('div', { class: 'esc-ctl' });
+  const capa = el('div', { class: 'esc-capa' });
+  raiz.append(el('div', { class: 'esc-patron' }), barra, area, ctl, capa);
+  cont.appendChild(raiz);
+  aplicarEstilo(raiz, estilo, fuente);
+
+  let opc = { ...opciones };
+  let juego = null;
+  let terminado = false;
+  let puntos = 0, aciertos = 0, errores = 0, vidas = 0;
+  let t0 = 0, relojId = null, restante = 0, nombreTarea = '';
+
+  const elTiempo = el('span', { class: 'esc-stat esc-tiempo', attrs: { hidden: true } });
+  const elVidas = el('span', { class: 'esc-stat', attrs: { hidden: true } });
+  const elPuntos = el('span', { class: 'esc-stat' });
+  const elProgreso = el('span', { class: 'esc-progreso' });
+  barra.append(elProgreso, el('span', { class: 'esp' }), elTiempo, elVidas, elPuntos);
+
+  const btnSon = el('button', { class: 'esc-btn', attrs: { title: 'Sonido' }, on: { click: () => { sonido.silenciar(!sonido.estaSilenciado()); pintarSon(); } } });
+  const pintarSon = () => { btnSon.textContent = sonido.estaSilenciado() ? '🔇' : '🔊'; };
+  pintarSon();
+  const btnPant = el('button', { class: 'esc-btn', text: '⛶', attrs: { title: 'Pantalla completa' }, on: { click: () => {
+    if (document.fullscreenElement) document.exitFullscreen(); else raiz.requestFullscreen && raiz.requestFullscreen();
+  } } });
+  const btnRei = el('button', { class: 'esc-btn', text: '↻', attrs: { title: 'Reiniciar' }, on: { click: () => reiniciar() } });
+  ctl.append(btnRei, btnSon, btnPant);
+
+  const pintarStats = () => {
+    elPuntos.textContent = '⭐ ' + puntos;
+    elVidas.hidden = !(opc.vidas > 0);
+    if (opc.vidas > 0) elVidas.textContent = '♥'.repeat(Math.max(0, vidas)) + '♡'.repeat(Math.max(0, opc.vidas - vidas));
+  };
+
+  const host = {
+    raiz: area, escenario: raiz, datos, tipo, plantilla, titulo,
+    get opciones() { return opc; },
+    rnd: Math.random,
+    sonido,
+    confeti: sonido.confeti,
+    acierto(p = 1, { sonar = true } = {}) { if (terminado) return; aciertos++; puntos += p; if (sonar) sonido.acierto(); pintarStats(); },
+    fallo({ vida = true, sonar = true } = {}) {
+      if (terminado) return false;
+      errores++; if (sonar) sonido.error();
+      if (vida && opc.vidas > 0) { vidas--; pintarStats(); if (vidas <= 0) { terminar({ motivo: 'vidas' }); return true; } }
+      pintarStats(); return false;
+    },
+    puntuar(d) { puntos += d; pintarStats(); },
+    fijarPuntos(n) { puntos = n; pintarStats(); },
+    progreso(h, t) { elProgreso.textContent = t ? `${h} / ${t}` : ''; },
+    terminar
+  };
+
+  function reloj() {
+    clearInterval(relojId);
+    const vistos = opc.tiempo > 0;
+    elTiempo.hidden = !vistos;
+    const pintar = () => {
+      if (!vistos) return;
+      elTiempo.textContent = '⏱ ' + fmtTiempo(Math.max(0, restante));
+      elTiempo.classList.toggle('urgente', restante <= 10);
+    };
+    restante = opc.tiempo || 0;
+    pintar();
+    relojId = setInterval(() => {
+      if (terminado) return;
+      if (vistos) {
+        restante--; pintar();
+        if (restante <= 5 && restante > 0) sonido.aviso();
+        if (restante <= 0) { clearInterval(relojId); (juego && juego.alAgotarTiempo) ? juego.alAgotarTiempo() : terminar({ motivo: 'tiempo' }); }
+      }
+    }, 1000);
+  }
+
+  function inicio() {
+    limpiar(capa); capa.hidden = false; capa.className = 'esc-capa esc-inicio';
+    barra.hidden = true; limpiar(area);
+    const campoNombre = tarea ? el('input', { class: 'esc-nombre', attrs: { placeholder: 'Escribe tu nombre', maxlength: 24 }, value: nombreTarea }) : null;
+    const iniciar = () => {
+      if (tarea) { nombreTarea = campoNombre.value.trim(); if (!nombreTarea) { campoNombre.focus(); campoNombre.classList.add('falta'); return; } }
+      arrancar();
+    };
+    capa.append(...[
+      el('div', { class: 'esc-inicio-pl', text: plantilla.nombre }),
+      el('h2', { class: 'esc-inicio-ti', text: titulo }),
+      campoNombre,
+      el('button', { class: 'esc-iniciar', on: { click: iniciar } }, [el('span', { class: 'tri', text: '▶' }), el('b', { text: 'INICIAR' })]),
+      el('p', { class: 'esc-inicio-de', text: plantilla.descripcion })
+    ].filter(Boolean));
+  }
+
+  function arrancar() {
+    sonido.desbloquear(); sonido.clic();
+    capa.hidden = true; barra.hidden = false;
+    terminado = false; puntos = aciertos = errores = 0; vidas = opc.vidas || 0;
+    pintarStats(); elProgreso.textContent = '';
+    limpiar(area);
+    t0 = Date.now();
+    try { juego = plantilla.montar(host) || {}; }
+    catch (e) { console.error(e); area.append(el('p', { class: 'esc-error', text: 'No se pudo iniciar: ' + e.message })); juego = {}; }
+    reloj();
+  }
+
+  function terminar(extra = {}) {
+    if (terminado) return;
+    terminado = true;
+    clearInterval(relojId);
+    if (juego && juego.destruir) { try { juego.destruir(); } catch (_) {} }
+    const segs = Math.round((Date.now() - t0) / 1000);
+    const res = { puntos, aciertos, errores, segundos: segs, ...extra };
+    const buen = extra.motivo !== 'vidas' && extra.motivo !== 'tiempo' || puntos > 0;
+    if (buen) { sonido.fin(); sonido.confeti(80); } else sonido.derrota();
+    limpiar(capa); capa.hidden = false; capa.className = 'esc-capa esc-fin';
+    const nombre = el('input', { class: 'esc-nombre', attrs: { placeholder: 'Tu nombre', maxlength: 24 } });
+    const codigo = el('div', { class: 'esc-codigo', attrs: { hidden: true } });
+    const guardar = el('button', { class: 'esc-btn-grande', text: 'Guardar en la tabla', on: { click: () => {
+      if (alTerminar) alTerminar({ ...res, nombre: nombre.value.trim() || 'Anónimo' });
+      guardar.disabled = true; guardar.textContent = '✓ Guardado'; nombre.disabled = true;
+    } } });
+    if (tarea && alTerminar) {
+      Promise.resolve(alTerminar({ ...res, nombre: nombreTarea })).then(async () => {
+        const c = await codificar({ t: tarea.id, ti: titulo, n: nombreTarea, p: puntos, a: aciertos, e: errores, s: segs, f: Date.now() });
+        codigo.hidden = false;
+        codigo.append(el('b', { text: 'Tu código de resultado (entrégaselo a tu profesor):' }), el('textarea', { attrs: { readonly: true, rows: 3 }, value: c, on: { focus: (ev) => ev.target.select() } }),
+          el('button', { class: 'esc-btn-grande', text: 'Copiar código', on: { click: () => navigator.clipboard && navigator.clipboard.writeText(c) } }));
+      });
+    }
+    capa.append(...[
+      el('div', { class: 'esc-inicio-pl', text: extra.motivo === 'tiempo' ? '¡Se acabó el tiempo!' : extra.motivo === 'vidas' ? 'Sin vidas' : '¡Actividad terminada!' }),
+      el('h2', { class: 'esc-inicio-ti', text: titulo }),
+      el('div', { class: 'esc-cifras' }, [
+        el('div', {}, [el('b', { text: String(puntos) }), el('span', { text: 'puntos' })]),
+        el('div', {}, [el('b', { text: String(aciertos) }), el('span', { text: 'aciertos' })]),
+        el('div', {}, [el('b', { text: String(errores) }), el('span', { text: 'errores' })]),
+        el('div', {}, [el('b', { text: fmtTiempo(segs) }), el('span', { text: 'tiempo' })])
+      ]),
+      alTerminar && !tarea ? el('div', { class: 'esc-guardar' }, [nombre, guardar]) : null,
+      codigo,
+      el('button', { class: 'esc-btn-grande', text: '↻ Jugar de nuevo', on: { click: reiniciar } })
+    ].filter(Boolean));
+  }
+
+  function reiniciar() {
+    clearInterval(relojId);
+    if (juego && juego.destruir) { try { juego.destruir(); } catch (_) {} }
+    juego = null; terminado = false;
+    inicio();
+  }
+
+  inicio();
+
+  return {
+    escenario: raiz,
+    setEstilo(e, f) { aplicarEstilo(raiz, e, f); window.dispatchEvent(new Event('resize')); },
+    setOpciones(o) { opc = { ...o }; },
+    reiniciar,
+    destruir() {
+      clearInterval(relojId);
+      if (juego && juego.destruir) { try { juego.destruir(); } catch (_) {} }
+      raiz.remove();
+    }
+  };
+}
