@@ -95,7 +95,7 @@ function construir(raiz, act, { modo, consulta = null }) {
   }
 
   const aviso_ajena = !propia ? el('div', { class: 'aviso-ajena' }, [
-    el('span', { text: act.tarea ? 'Esta es una tarea. Escribe tu nombre y pulsa INICIAR.' : 'Esta actividad es de la comunidad o te la han compartido.' }),
+    el('span', { text: act.tarea ? 'Esta es una tarea. Escribe tu nombre y pulsa INICIAR.' : 'Esta actividad es un ejemplo o te la han compartido.' }),
     el('button', { class: 'btn btn-mini', text: 'Guardar una copia para editarla', on: { click: async () => { const c = await copiarActividad(conDefectos({ ...paquete(act), id: uid() })); aviso('Copia guardada en Mis actividades'); ir('/editar/' + c.id); } } })
   ]) : null;
 
@@ -119,11 +119,11 @@ function construir(raiz, act, { modo, consulta = null }) {
             el('h1', { text: act.titulo }),
             act.tarea ? null : el('div', { class: 'fila' }, [
               el('button', { class: 'btn btn-claro', text: '✔ Definir tarea', on: { click: () => definirTarea(act) } }),
-              el('button', { class: 'btn btn-claro', text: '🌐 Compartir', on: { click: () => compartir(act, { propia, alGuardar: () => { const h1 = document.querySelector('.info h1'); if (h1) h1.textContent = act.titulo; } }) } })
+              el('button', { class: 'btn btn-claro', text: '🌐 Compartir', on: { click: () => compartir(act) } })
             ])
           ]),
           el('div', { class: 'fila entre' }, [
-            el('div', {}, [el('p', { class: 'sub', text: modo === 'propia' ? 'por Yo' : act.tarea ? 'Tarea' : 'Actividad de la comunidad' }), el('div', {}, (act.etiquetas || []).map((t) => el('span', { class: 'etiqueta', text: t })))]),
+            el('div', {}, [el('p', { class: 'sub', text: modo === 'propia' ? 'por Yo' : act.tarea ? 'Tarea' : 'Actividad de ejemplo' }), el('div', {}, (act.etiquetas || []).map((t) => el('span', { class: 'etiqueta', text: t })))]),
             el('div', { class: 'fila acc' }, [
               propia ? el('a', { class: 'enlace-btn', text: '✎ Editar contenido…', attrs: { href: '#/editar/' + act.id } }) : null,
               el('button', { class: 'enlace-btn', text: '🖨 Imprimir', on: { click: () => imprimir(act, plantilla) } }),
@@ -152,7 +152,7 @@ export async function vistaActividad(raiz, params, consulta) {
 
 export function vistaEjemplo(raiz, params, consulta) {
   const e = EJEMPLOS.find((x) => x.id === params.id);
-  if (!e) { ir('/comunidad'); return; }
+  if (!e) { ir('/'); return; }
   return construir(raiz, conDefectos(JSON.parse(JSON.stringify(e))), { modo: 'ajena', consulta });
 }
 

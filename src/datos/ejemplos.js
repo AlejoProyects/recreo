@@ -1,6 +1,6 @@
 'use strict';
 
-// Actividades de ejemplo de la Comunidad (contenido propio, en español).
+// Actividades de ejemplo (contenido propio, en español).
 const R = (t, ok = false) => ({ t, ok });
 const q = (id, enun, ...resp) => ({ id, q: enun, img: null, resp });
 const par = (id, a, b) => ({ id, a, b, imgA: null, imgB: null });

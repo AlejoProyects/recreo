@@ -2,7 +2,7 @@
 
 // Ilustraciones planas (SVG propios, viewBox 160x120) de cada plantilla. Se usan como miniatura
 // en el selector de plantillas, la lista "Cambiar plantilla" y las tarjetas de actividades.
-const B = '#14a5f7', R = '#ff4d6d', W = '#ffffff', Y = '#ffc233', G = '#2bc16b', P = '#9b5de5', K = '#1d3557', O = '#ff8a3d', L = '#bfe6fb';
+const B = 'var(--acento)', R = '#ff4d6d', W = '#ffffff', Y = '#ffc233', G = '#2bc16b', P = '#9b5de5', K = '#1d3557', O = '#ff8a3d', L = '#bfe6fb';
 
 const r = (x, y, w, h, f, rx = 5) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${rx}" fill="${f}"/>`;
 const c = (x, y, rad, f) => `<circle cx="${x}" cy="${y}" r="${rad}" fill="${f}"/>`;

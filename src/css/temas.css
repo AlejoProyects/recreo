@@ -1,0 +1,27 @@
+/* Tokens de tema. Claro por defecto; oscuro con [data-tema="oscuro"]; color de acento con [data-color]. */
+:root {
+  --acento: #6c4ef2; --acento-osc: #5538d6;
+  --tarjeta: #ffffff; --tinta: #1d1b2f; --gris: #6b6880; --linea: #e4e1ef; --suave: #f5f3fb;
+  --fondo: linear-gradient(180deg, color-mix(in srgb, var(--acento) 18%, #fff) 0, color-mix(in srgb, var(--acento) 6%, #fff) 360px, #faf9fe 760px);
+  --cab: rgba(255, 255, 255, .86);
+  --sombra: 0 1px 2px rgba(40, 30, 90, .08), 0 6px 18px rgba(40, 30, 90, .07);
+  --ok: #2fa84f; --mal: #e0473b;
+  --aviso-bg: #fff6dc; --aviso-borde: #efd48a; --ok-bg: #e6f6ea; --ok-borde: #b6dfb6;
+  /* alias que usa el resto del CSS */
+  --azul: var(--acento); --azul-osc: var(--acento-osc); --azul-claro: color-mix(in srgb, var(--acento) 12%, var(--tarjeta));
+  --radio: 16px; --radio-b: 10px;
+  color-scheme: light;
+}
+:root[data-tema="oscuro"] {
+  --tarjeta: #1f1d36; --tinta: #ece9ff; --gris: #a7a3c8; --linea: #37345c; --suave: #2a2850;
+  --fondo: linear-gradient(180deg, color-mix(in srgb, var(--acento) 30%, #12101f) 0, #14122a 420px, #100f1e 800px);
+  --cab: rgba(24, 22, 44, .86);
+  --sombra: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .35);
+  --aviso-bg: #3a3320; --aviso-borde: #6d5f2a; --ok-bg: #1d3a2a; --ok-borde: #2f6a47;
+  color-scheme: dark;
+}
+:root[data-color="oceano"] { --acento: #1e88e5; --acento-osc: #1565c0; }
+:root[data-color="bosque"] { --acento: #2e9e5b; --acento-osc: #1f7d44; }
+:root[data-color="mandarina"] { --acento: #f07a1a; --acento-osc: #d4620a; }
+:root[data-color="fresa"] { --acento: #e8437a; --acento-osc: #c92d63; }
+:root[data-color="turquesa"] { --acento: #0fa3a3; --acento-osc: #0c8585; }

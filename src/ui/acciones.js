@@ -4,8 +4,6 @@ import { el, aviso, escapar, barajar } from '../core/util.js';
 import { codificar, sinImagenes, paquete, urlBase } from '../core/codec.js';
 import { contenidoParaJugar } from '../core/contenido.js';
 import { NOMBRE } from '../nombre.js';
-import { actividades } from '../core/almacen.js';
-import { EDADES, ASIGNATURAS, metaDe } from '../core/etiquetas.js';
 
 function modal(titulo, cuerpo, acciones = []) {
   const fondo = el('div', { class: 'modal-fondo', on: { click: (e) => { if (e.target === fondo) fondo.remove(); } } }, [
@@ -27,7 +25,7 @@ async function enlaceDe(act, { imagenes, tarea } = {}) {
   return `${urlBase()}#/c/${await codificar(datos)}`;
 }
 
-export async function compartir(act, { propia = false, alGuardar = null } = {}) {
+export async function compartir(act) {
   const campo = el('input', { attrs: { type: 'text', readonly: true }, on: { focus: (e) => e.target.select() } });
   const nota = el('p', { class: 'sub' });
   let conImg = false;
@@ -37,48 +35,13 @@ export async function compartir(act, { propia = false, alGuardar = null } = {}) 
     nota.textContent = `Enlace de ${url.length.toLocaleString('es')} caracteres. El contenido viaja dentro del propio enlace: no se sube a ningún servidor.`;
     return url;
   };
-  const hay = tieneImagenes(act);
-  const chk = hay ? el('label', { class: 'chk' }, [el('input', { attrs: { type: 'checkbox' }, on: { change: (e) => { conImg = e.target.checked; pintar(); } } }), ' Incluir imágenes y audios (el enlace será mucho más largo)']) : null;
-
-  // Datos para publicar (solo en actividades propias): título, franja de edad, asignatura, tema y visibilidad.
-  let meta = null, cuerpoMeta = null;
-  if (propia) {
-    const m = metaDe(act);
-    meta = { titulo: act.titulo, edad: new Set(m.edad), asig: new Set(m.asig), tema: act.tema || '', publica: !!act.publica };
-    const chips = (lista, set) => el('div', { class: 'chips-meta' }, lista.map((t) => {
-      const b = el('button', { class: 'etiqueta-btn' + (set.has(t) ? ' act' : ''), attrs: { type: 'button' }, text: t, on: { click: () => { set.has(t) ? set.delete(t) : set.add(t); b.classList.toggle('act'); } } });
-      return b;
-    }));
-    cuerpoMeta = el('div', { class: 'meta-pub' }, [
-      el('label', { class: 'campo', text: 'Título del recurso' }), el('input', { attrs: { type: 'text', maxlength: 80 }, value: meta.titulo, on: { input: (e) => { meta.titulo = e.target.value; } } }),
-      el('label', { class: 'campo', text: 'Franja de edad' }), chips(EDADES, meta.edad),
-      el('label', { class: 'campo', text: 'Asignatura' }), chips(ASIGNATURAS, meta.asig),
-      el('label', { class: 'campo', text: 'Tema' }), el('input', { attrs: { type: 'text', maxlength: 60, placeholder: 'Ej.: Fracciones' }, value: meta.tema, on: { input: (e) => { meta.tema = e.target.value; } } }),
-      el('div', { class: 'fila', style: { marginTop: '10px' } }, [
-        el('label', { class: 'chk' }, [el('input', { attrs: { type: 'radio', name: 'vis' }, checked: !meta.publica, on: { change: () => { meta.publica = false; } } }), ' Privada (solo en este dispositivo)']),
-        el('label', { class: 'chk' }, [el('input', { attrs: { type: 'radio', name: 'vis' }, checked: meta.publica, on: { change: () => { meta.publica = true; } } }), ' Publicar en la Comunidad'])
-      ])
-    ]);
-  }
-  const guardarMeta = async () => {
-    act.titulo = (meta.titulo || '').trim() || act.titulo;
-    act.edad = [...meta.edad]; act.asignaturas = [...meta.asig]; act.tema = meta.tema.trim(); act.publica = meta.publica;
-    act.etiquetas = [...act.edad, ...act.asignaturas, ...(act.tema ? [act.tema] : [])];
-    act.modificado = Date.now();
-    await actividades.guardar(act);
-    aviso(act.publica ? 'Publicada en la Comunidad de este dispositivo' : 'Guardada como privada');
-    if (alGuardar) alGuardar();
-  };
-
-  modal('Compartir recurso', [
-    cuerpoMeta,
-    el('h3', { text: 'Enlace', style: { margin: '14px 0 6px' } }),
+  const chk = tieneImagenes(act) ? el('label', { class: 'chk' }, [el('input', { attrs: { type: 'checkbox' }, on: { change: (e) => { conImg = e.target.checked; pintar(); } } }), ' Incluir imágenes y audios (el enlace será mucho más largo)']) : null;
+  modal('Compartir actividad', [
     el('p', { text: 'Cualquiera con este enlace podrá jugar tu actividad y guardar una copia para editarla.' }), campo, chk, nota
   ], [
     el('button', { class: 'btn btn-claro', text: 'Descargar archivo', on: { click: () => descargar(act) } }),
-    el('button', { class: 'btn btn-claro', text: 'Copiar enlace', on: { click: () => copiar(campo.value) } }),
-    propia ? el('button', { class: 'btn', text: 'Guardar datos', on: { click: guardarMeta } }) : null
-  ].filter(Boolean));
+    el('button', { class: 'btn', text: 'Copiar enlace', on: { click: () => copiar(campo.value) } })
+  ]);
   await pintar();
 }
 

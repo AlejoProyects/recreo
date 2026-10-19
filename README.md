@@ -15,7 +15,7 @@ Funciona 100 % en el navegador: no hay servidor, cuentas ni límites de uso. El 
 - Editor de contenido por tipo, con imágenes, **audio por elemento** (grabado con el micrófono) e importación de texto pegado.
 - **Configuración de actividad** como en el original: cronómetro (ninguno / hacia adelante / cuenta atrás), control del ritmo, maestría (incluye *Mostrar respuestas al final*), anti-trampas (barajar y pantalla borrosa), formato y modo, con *Aplicar*, *Definir como predeterminado para la plantilla* y *Volver al predeterminado*.
 - **Mis actividades** con carpetas, papelera de reciclaje (30 días) y orden por nombre, modificadas o última vez jugada.
-- **Publicar**: franja de edad, asignatura y tema; la Comunidad filtra por esas etiquetas.
+- **Tema claro (por defecto) y oscuro**, 6 colores de acento (Violeta, Océano, Bosque, Mandarina, Fresa, Turquesa) y favicon que sigue al color elegido.
 - Editor con subir/bajar/duplicar/eliminar filas, límites mín./máx., **historial de versiones** y variante **Rueda con preguntas**.
 - **Listas de reproducción**: juega varias actividades en secuencia (Anterior/Siguiente).
 - Pantalla de inicio con **Avance** (vista previa del contenido) y **Juego**.
@@ -23,7 +23,7 @@ Funciona 100 % en el navegador: no hay servidor, cuentas ni límites de uso. El 
 - **Compartir** por enlace (el contenido viaja comprimido dentro del enlace) o por archivo, **incrustar** con `<iframe>`.
 - **Tareas**: enlace para alumnos → código de resultado → importación en *Mis resultados* (con exportación a CSV).
 - Tabla de clasificación, opciones por plantilla (temporizador, vidas, orden aleatorio…), pantalla completa y modo táctil.
-- Comunidad con 37 actividades de ejemplo para jugar, copiar y editar.
+- 37 actividades de ejemplo para jugar, copiar y editar.
 
 ## Desarrollo
 
@@ -43,14 +43,13 @@ Monta cada plantilla con cada tipo de contenido compatible y cada actividad de e
 
 ## Estructura
 
-- `src/core/` — contenido y adaptadores, estilos, escenario (reproductor), almacenamiento (IndexedDB), router, codec de enlaces.
+- `src/core/` — contenido y adaptadores, estilos de juego, tema, escenario (reproductor), almacenamiento (IndexedDB), router, codec de enlaces.
 - `src/juegos/` — las plantillas, agrupadas por familia. Cada una declara `acepta` (tipos de contenido que juega de forma nativa),
   `opciones` y `montar(host)`.
-- `src/ui/` — páginas (portada, crear, editor, actividad, comunidad, mis actividades, resultados, funciones).
+- `src/ui/` — páginas (portada, crear, editor, actividad, mis actividades, listas, resultados, funciones).
 - `src/datos/` — actividades de ejemplo.
 
 ## Límites conocidos
 
 - Al no haber servidor, los datos viven en el navegador del dispositivo (IndexedDB): exporta tus actividades a archivo para respaldarlas o moverlas.
-- La Comunidad contiene solo los ejemplos incluidos; no hay biblioteca pública de millones de actividades.
 - Los resultados de las tareas llegan al profesor mediante un código que entrega el alumno, no de forma automática.

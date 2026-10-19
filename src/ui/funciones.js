@@ -16,7 +16,7 @@ const SECCIONES = () => [
     ['Si creaste unas Parejas con nombres de formas, conviértelas en Tarjetas flash, un Cuestionario o una Sopa de letras con exactamente el mismo contenido.',
      'Es ideal para diferenciar y reforzar: el mismo contenido en formatos distintos según el grupo.']],
   ['✎', 'Editar cualquier actividad', 'Adapta el contenido a tu clase y a tu forma de enseñar.',
-    ['Copia una actividad de la Comunidad y modifícala a tu gusto. Tus actividades se guardan en este navegador y se pueden exportar a un archivo.']],
+    ['Copia cualquiera de los ejemplos y modifícala a tu gusto. Tus actividades se guardan en este navegador y se pueden exportar a un archivo.']],
   ['🎨', 'Estilos y opciones visuales', `${ESTILOS.length} estilos visuales, fuentes y opciones de juego.`,
     ['Cada estilo cambia colores, fondos y tipografía. También puedes configurar un temporizador, las vidas o el orden aleatorio.',
      'Hay fuentes pensadas para la lectura, incluida una apta para dislexia, y un estilo de alta legibilidad.']],

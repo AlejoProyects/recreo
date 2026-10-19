@@ -88,7 +88,7 @@ export async function vistaMis(raiz) {
       ];
       grid.append(el('div', { class: 'mis-card' }, [
         el('a', { class: 'mis-top', attrs: { href: papelera ? '#/mis' : '#/a/' + a.id } }, [iconoPlantilla(p), el('div', {}, [el('b', { text: a.titulo }), el('small', { text: `${p.nombre} · ${cuenta(a.tipo, a.contenido)} elementos` })])]),
-        el('div', { class: 'mis-fecha sub', text: (a.carpeta ? '📁 ' + a.carpeta + ' · ' : '') + (a.publica ? 'Pública · ' : 'Privada · ') + 'Modificada ' + new Date(a.modificado).toLocaleDateString('es') + (a.jugado ? ' · Jugada ' + new Date(a.jugado).toLocaleDateString('es') : '') }),
+        el('div', { class: 'mis-fecha sub', text: (a.carpeta ? '📁 ' + a.carpeta + ' · ' : '') + 'Modificada ' + new Date(a.modificado).toLocaleDateString('es') + (a.jugado ? ' · Jugada ' + new Date(a.jugado).toLocaleDateString('es') : '') }),
         el('div', { class: 'fila' }, acciones)
       ]));
     });
