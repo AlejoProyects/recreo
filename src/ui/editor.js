@@ -7,7 +7,7 @@ import { plantillaPorId } from '../plantillas.js';
 import { TIPOS, nuevoItem, contenidoVacio, cuenta } from '../core/contenido.js';
 import { actividades } from '../core/almacen.js';
 import { ir } from '../core/router.js';
-import { valoresPorDefecto } from '../juegos/ayudas.js';
+import { opcionesIniciales } from '../juegos/ayudas.js';
 import { estiloRecordado } from './selectores.js';
 
 // ---- imágenes: se reducen a 640 px para no inflar el almacenamiento ----
@@ -183,7 +183,7 @@ export async function vistaEditor(raiz, params) {
     const tipo = plantilla.acepta[0];
     act = {
       id: uid(), titulo: '', plantilla: plantilla.id, tipo, contenido: contenidoVacio(tipo, tipo === 'quiz' ? 4 : 6),
-      opciones: valoresPorDefecto(plantilla.opciones), estilo: estiloRecordado(), fuente: 'auto', publica: false, etiquetas: [],
+      opciones: opcionesIniciales(plantilla), estilo: estiloRecordado(), fuente: 'auto', publica: false, etiquetas: [],
       creado: Date.now(), modificado: Date.now(), nuevo: true
     };
   }

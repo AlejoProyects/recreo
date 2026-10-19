@@ -6,8 +6,8 @@ import { plantillaPorId } from '../plantillas.js';
 import { montarEscenario } from '../core/escenario.js';
 import { contenidoParaJugar, cuenta } from '../core/contenido.js';
 import { actividades, resultados } from '../core/almacen.js';
-import { valoresPorDefecto } from '../juegos/ayudas.js';
-import { panelPlantillas, panelEstilo, panelOpciones } from './selectores.js';
+import { opcionesIniciales } from '../juegos/ayudas.js';
+import { panelPlantillas, panelEstilo, panelConfig } from './selectores.js';
 import { ir } from '../core/router.js';
 import { compartir, incrustar, imprimir, definirTarea } from './acciones.js';
 import { decodificar, paquete } from '../core/codec.js';
@@ -16,7 +16,7 @@ import { copiarActividad } from './mis.js';
 
 const conDefectos = (a) => {
   const p = plantillaPorId(a.plantilla);
-  return { etiquetas: [], fuente: 'auto', estilo: 'clasico', ...a, opciones: { ...valoresPorDefecto(p && p.opciones), ...(a.opciones || {}) } };
+  return { etiquetas: [], fuente: 'auto', estilo: 'clasico', ...a, opciones: { ...opcionesIniciales(p), ...(a.opciones || {}) } };
 };
 
 // Construye la página de una actividad. modo: 'propia' | 'ajena' (ejemplo o recibida por enlace)
@@ -27,7 +27,7 @@ function construir(raiz, act, { modo }) {
   let ctl = null;
   const zonaJuego = el('div', { class: 'juego-zona' });
   const lateral = el('aside', { class: 'lateral' });
-  const tabla = el('div', { class: 'tarjeta' });
+  const tabla = el('div', { class: 'tabla-caja' });
   const guardar = () => { if (propia) { act.modificado = Date.now(); return actividades.guardar(act); } };
 
   function montar() {
@@ -50,17 +50,35 @@ function construir(raiz, act, { modo }) {
 
   function cambiarPlantilla(p) {
     plantilla = p; act.plantilla = p.id;
-    act.opciones = { ...valoresPorDefecto(p.opciones), ...Object.fromEntries(Object.entries(act.opciones || {}).filter(([k]) => (p.opciones || []).some((o) => o.k === k))) };
-    guardar(); montar(); pintarLateral();
+    const comunes = ['cronometro', 'tiempo', 'borroso'];
+    act.opciones = { ...opcionesIniciales(p), ...Object.fromEntries(Object.entries(act.opciones || {}).filter(([k]) => comunes.includes(k) || (p.opciones || []).some((o) => o.k === k))) };
+    guardar(); montar(); pintarLateral(); pintarPestanas();
   }
   function pintarLateral() {
     limpiar(lateral);
     lateral.append(
       panelPlantillas(act, cambiarPlantilla),
-      panelEstilo(act, () => { guardar(); if (ctl) ctl.setEstilo(act.estilo, act.fuente); }),
-      panelOpciones(plantilla, act, () => { guardar(); if (ctl) { ctl.setOpciones(act.opciones); ctl.reiniciar(); } })
+      panelEstilo(act, () => { guardar(); if (ctl) ctl.setEstilo(act.estilo, act.fuente); })
     );
   }
+
+  // Pestañas bajo el juego, como en el original.
+  const cuerpoPestana = el('div', { class: 'pestana-cuerpo' });
+  let pestana = 'config';
+  function pintarPestanas() {
+    limpiar(cuerpoPestana);
+    if (pestana === 'config') cuerpoPestana.append(panelConfig(plantilla, act, () => { guardar(); if (ctl) { ctl.setOpciones(act.opciones); ctl.reiniciar(); } }));
+    else if (pestana === 'tabla') { cuerpoPestana.append(tabla); pintarTabla(); }
+    else cuerpoPestana.append(
+      el('p', { text: 'Envía a tus alumnos un enlace para que jueguen esta actividad como tarea. Cada alumno escribe su nombre y, al terminar, recibe un código de resultado que te entrega.' }),
+      el('div', { class: 'fila' }, [el('button', { class: 'btn', text: 'Crear enlace de tarea', on: { click: () => definirTarea(act) } }), el('a', { class: 'btn btn-claro', text: 'Ver resultados importados', attrs: { href: '#/resultados' } })])
+    );
+  }
+  const pestanas = el('div', { class: 'tarjeta pestanas' }, [
+    el('div', { class: 'pestana-lista' }, [['config', 'Configuración de actividad'], ['tabla', 'Tabla de clasificación'], ['tareas', 'Tareas']].map(([id, t]) =>
+      el('button', { class: 'pestana' + (id === pestana ? ' act' : ''), text: t, on: { click: (e) => { pestana = id; pestanas.querySelectorAll('.pestana').forEach((b) => b.classList.toggle('act', b === e.currentTarget)); pintarPestanas(); } } }))),
+    cuerpoPestana
+  ]);
   async function pintarTabla() {
     limpiar(tabla);
     const idRes = act.tarea ? act.tarea.id : act.id;
@@ -101,11 +119,11 @@ function construir(raiz, act, { modo }) {
           ])
         ])
       ]),
-      tabla
+      pestanas
     ]),
     lateral
   ]));
-  montar(); pintarLateral(); pintarTabla();
+  montar(); pintarLateral(); pintarPestanas();
   return () => { if (ctl) ctl.destruir(); };
 }
 

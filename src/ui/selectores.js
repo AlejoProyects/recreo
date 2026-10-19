@@ -1,6 +1,7 @@
 'use strict';
 
-import { el, limpiar } from '../core/util.js';
+import { el, limpiar, aviso } from '../core/util.js';
+import { GRUPOS, opcionesIniciales } from '../juegos/ayudas.js';
 import { ESTILOS, FUENTES, miniatura } from '../core/estilos.js';
 import { PLANTILLAS } from '../plantillas.js';
 import { tipoPara } from '../core/contenido.js';
@@ -47,29 +48,51 @@ export function panelEstilo(act, alCambiar) {
   return caja;
 }
 
-// ---- Opciones de la plantilla ----
-export function panelOpciones(plantilla, act, alCambiar) {
-  const caja = el('div', { class: 'panel' }, [el('h3', { text: 'Opciones' })]);
-  const specs = plantilla.opciones || [];
-  if (!specs.length) { caja.append(el('p', { class: 'sub', text: 'Esta plantilla no tiene opciones.' })); return caja; }
-  specs.forEach((s) => {
-    const v = act.opciones[s.k] ?? s.def;
-    if (s.tipo === 'check') {
-      caja.append(el('label', { class: 'chk' }, [el('input', { attrs: { type: 'checkbox' }, checked: !!v, on: { change: (e) => { act.opciones[s.k] = e.target.checked; alCambiar(); } } }), ' ' + s.etiqueta]));
-    } else if (s.tipo === 'rango') {
-      const etiqueta = (x) => (x === 0 && s.cero) ? s.cero : x + (s.sufijo || '');
-      const val = el('b', { text: etiqueta(v) });
-      caja.append(el('div', { class: 'opc-rango' }, [
-        el('label', { class: 'opc-et' }, [el('span', { text: s.etiqueta }), val]),
-        el('input', { attrs: { type: 'range', min: s.min, max: s.max, step: s.paso, value: v }, on: {
-          input: (e) => { val.textContent = etiqueta(+e.target.value); },
-          change: (e) => { act.opciones[s.k] = +e.target.value; alCambiar(); }
-        } })
-      ]));
-    } else if (s.tipo === 'opcion') {
-      caja.append(el('div', { class: 'opc-rango' }, [el('label', { class: 'opc-et', text: s.etiqueta }),
-        el('select', { on: { change: (e) => { act.opciones[s.k] = e.target.value; alCambiar(); } } }, s.opciones.map((o) => el('option', { attrs: { value: o.v, selected: o.v === v }, text: o.t })))]));
+// ---- Configuración de actividad (secciones como en el original) ----
+export function panelConfig(plantilla, act, alAplicar) {
+  const raiz = el('div', { class: 'config' });
+  let borrador = { ...act.opciones };
+  const specs = (plantilla.opciones || []).filter((s) => s.k !== 'tiempo');
+  const btnAplicar = el('button', { class: 'btn', text: 'Aplicar a esta actividad', attrs: { disabled: true }, on: { click: () => { act.opciones = { ...borrador }; btnAplicar.disabled = true; alAplicar(); } } });
+  const cambio = () => { btnAplicar.disabled = JSON.stringify(borrador) === JSON.stringify(act.opciones); };
+
+  const control = (s) => {
+    const v = borrador[s.k] ?? s.def;
+    if (s.tipo === 'check') return el('label', { class: 'chk cfg-fila' }, [el('input', { attrs: { type: 'checkbox' }, checked: !!v, on: { change: (e) => { borrador[s.k] = e.target.checked; cambio(); } } }), ' ' + s.etiqueta]);
+    if (s.tipo === 'rango') {
+      const txt = (x) => (x === 0 && s.cero) ? s.cero : x + (s.sufijo || '');
+      const val = el('b', { text: txt(v) });
+      return el('div', { class: 'cfg-fila cfg-rango' }, [el('label', {}, [el('span', { text: s.etiqueta }), val]),
+        el('input', { attrs: { type: 'range', min: s.min, max: s.max, step: s.paso, value: v }, on: { input: (e) => { val.textContent = txt(+e.target.value); }, change: (e) => { borrador[s.k] = +e.target.value; cambio(); } } })]);
     }
-  });
-  return caja;
+    return el('div', { class: 'cfg-fila cfg-sel' }, [el('label', { text: s.etiqueta }),
+      el('select', { on: { change: (e) => { borrador[s.k] = e.target.value; cambio(); } } }, s.opciones.map((o) => el('option', { attrs: { value: o.v, selected: o.v === v }, text: o.t })))]);
+  };
+  const seccion = (titulo, hijos) => el('div', { class: 'cfg-seccion' }, [el('h4', { text: titulo }), ...hijos]);
+
+  function pintar() {
+    limpiar(raiz);
+    // Cronómetro (común a todas las plantillas)
+    const modo = borrador.cronometro || 'ninguno';
+    const seg = borrador.tiempo || 0;
+    const mm = el('input', { attrs: { type: 'number', min: 0, max: 180 }, value: Math.floor(seg / 60), on: { change: () => { borrador.tiempo = Math.max(1, (+mm.value || 0) * 60 + (+ss.value || 0)); cambio(); } } });
+    const ss = el('input', { attrs: { type: 'number', min: 0, max: 59 }, value: seg % 60, on: { change: () => { borrador.tiempo = Math.max(1, (+mm.value || 0) * 60 + (+ss.value || 0)); cambio(); } } });
+    raiz.append(seccion('Cronómetro', [
+      el('div', { class: 'cfg-fila cfg-sel' }, [el('label', { text: 'Modo' }), el('select', { on: { change: (e) => { borrador.cronometro = e.target.value; if (e.target.value === 'atras' && !borrador.tiempo) borrador.tiempo = 60; cambio(); pintar(); } } },
+        [['ninguno', 'Ninguno'], ['adelante', 'Cuenta hacia adelante'], ['atras', 'Cuenta atrás']].map(([v, t]) => el('option', { attrs: { value: v, selected: v === modo }, text: t })))]),
+      modo === 'atras' ? el('div', { class: 'cfg-fila cfg-tiempo' }, [mm, el('span', { text: 'm' }), ss, el('span', { text: 's' })]) : null
+    ]));
+    GRUPOS.forEach(([g, titulo]) => {
+      const lista = specs.filter((s) => (s.grupo || 'modo') === g).map(control);
+      if (g === 'anti') lista.push(el('label', { class: 'chk cfg-fila' }, [el('input', { attrs: { type: 'checkbox' }, checked: !!borrador.borroso, on: { change: (e) => { borrador.borroso = e.target.checked; cambio(); } } }), ' Pantalla borrosa cuando no hay actividad en curso']));
+      if (lista.length) raiz.append(seccion(titulo, lista));
+    });
+    raiz.append(el('div', { class: 'cfg-botones' }, [
+      btnAplicar,
+      el('button', { class: 'btn btn-claro', text: 'Definir como predeterminado para la plantilla', on: { click: () => { pref.guardar('predet:' + plantilla.id, borrador); aviso('Guardado como predeterminado para ' + plantilla.nombre); } } }),
+      el('button', { class: 'btn btn-claro', text: 'Volver al valor predeterminado', on: { click: () => { borrador = opcionesIniciales(plantilla); cambio(); pintar(); } } })
+    ]));
+  }
+  pintar();
+  return raiz;
 }

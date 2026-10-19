@@ -6,6 +6,7 @@
   user-select: none;
 }
 .escenario:fullscreen { aspect-ratio: auto; height: 100vh; }
+.esc-juego.borroso { filter: blur(18px); pointer-events: none; }
 .esc-patron { position: absolute; inset: 0; background-image: var(--e-patron, none); pointer-events: none; }
 .esc-barra { position: absolute; top: 0; left: 0; right: 0; height: 2.6em; display: flex; align-items: center; gap: .9em; padding: 0 1em; z-index: 3; font-weight: 800; background: rgba(0,0,0,.12); }
 .esc-barra .esp { flex: 1; }
@@ -16,10 +17,10 @@
 .esc-btn { background: rgba(0,0,0,.28); color: #fff; border: none; width: 2.2em; height: 2.2em; border-radius: 6px; font-size: 1em; display: grid; place-items: center; }
 .esc-btn:hover { background: rgba(0,0,0,.5); }
 .esc-capa { position: absolute; inset: 0; z-index: 5; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .8em; padding: 1.5em; text-align: center; background: rgba(0,0,0,.55); color: #fff; }
-.esc-inicio-pl { font-size: 1.3em; font-weight: 700; opacity: .95; }
-.esc-inicio-ti { font-size: 2.4em; line-height: 1.1; max-width: 90%; text-shadow: 0 2px 8px rgba(0,0,0,.4); }
-.esc-inicio-de { font-size: 1.05em; max-width: 78%; margin-bottom: 1.6em; opacity: .95; }
-.esc-iniciar { background: #2eb1ff; color: #fff; border: none; width: 6.4em; padding: .7em 0 .5em; display: flex; flex-direction: column; align-items: center; gap: .1em; border-radius: 4px; font-size: 1.1em; }
+.esc-inicio-pl { font-size: min(1.3em, 5cqh); font-weight: 700; opacity: .95; }
+.esc-inicio-ti { font-size: min(2.4em, 9cqh); line-height: 1.1; max-width: 90%; text-shadow: 0 2px 8px rgba(0,0,0,.4); }
+.esc-inicio-de { font-size: min(1.05em, 4cqh); max-width: 78%; margin-bottom: 1.6em; opacity: .95; }
+.esc-iniciar { font-size: min(1.1em, 4.2cqh); background: #2eb1ff; color: #fff; border: none; width: 6.4em; padding: .7em 0 .5em; display: flex; flex-direction: column; align-items: center; gap: .1em; border-radius: 4px; font-size: 1.1em; }
 .esc-iniciar .tri { font-size: 3em; line-height: 1; } .esc-iniciar b { font-size: 1.6em; }
 .esc-iniciar:hover { background: #1d9be8; }
 .esc-cifras { display: flex; gap: 1.6em; flex-wrap: wrap; justify-content: center; }
@@ -47,17 +48,16 @@
 .quiz-r { flex: 2 1 0; min-height: 0; display: grid; gap: .8em; grid-template-columns: 1fr 1fr; }
 .quiz-r.n3, .quiz-r.n5 { grid-template-columns: 1fr 1fr; }
 .quiz-r.n2 { grid-template-columns: 1fr 1fr; }
+.quiz-sig { align-self: center; padding: .4em 2em; }
 .quiz-r .e-btn { font-size: 1.15em; display: flex; align-items: center; justify-content: center; }
 
 /* Rueda */
-.rueda { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; gap: 2em; }
-.rueda-caja { position: relative; height: 100%; aspect-ratio: 1; max-width: 100%; }
-.rueda-canvas { display: block; }
-.rueda-flecha { position: absolute; top: -2px; left: 50%; width: 0; height: 0; transform: translateX(-50%); border-left: .9em solid transparent; border-right: .9em solid transparent; border-top: 1.8em solid #fff; filter: drop-shadow(0 2px 3px rgba(0,0,0,.5)); }
-.rueda-giro { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 22%; aspect-ratio: 1; border-radius: 50%; border: 4px solid #fff; background: #2b2f3a; color: #fff; font-weight: 800; font-size: 1em; box-shadow: 0 2px 8px rgba(0,0,0,.4); }
-.rueda-giro:hover:not(:disabled) { background: var(--e-acento); }
-.rueda-ganador { background: var(--e-tarjeta); color: var(--e-tinta-t); border: 3px solid var(--e-acento); border-radius: .6em; padding: .8em 1.2em; font-size: 1.6em; font-weight: 800; max-width: 40%; text-align: center; animation: aparece .4s; }
-@keyframes aparece { from { transform: scale(.6); opacity: 0; } }
+.rueda { position: absolute; inset: 0; }
+.rueda-canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+.rueda-pista { position: absolute; top: .3em; left: 0; right: 0; text-align: center; font-size: .95em; opacity: .85; pointer-events: none; }
+.rueda-botones { position: absolute; left: 50%; bottom: 2%; transform: translateX(-50%); display: flex; gap: .3em; z-index: 3; }
+.rueda-b { min-width: 6em; padding: .3em 1em; font-size: .85em; font-weight: 600; color: #222; background: linear-gradient(180deg, #fff, #e6d4f0 60%, #cfe6d9); border: 1px solid #777; border-radius: .25em; }
+.rueda-b:hover { background: linear-gradient(180deg, #fff, #d9b8ec 60%, #b5dcc6); }
 
 /* Abrecajas */
 .cajas { width: 100%; height: 100%; display: grid; grid-template-columns: repeat(var(--cols, 3), 1fr); gap: .8em; align-content: center; }

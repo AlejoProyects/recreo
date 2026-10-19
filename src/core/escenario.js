@@ -66,26 +66,36 @@ export function montarEscenario(cont, { plantilla, titulo, tipo, datos, opciones
     terminar
   };
 
+  // Cronómetro: 'ninguno' | 'adelante' (cuenta lo transcurrido) | 'atras' (cuenta atrás desde opc.tiempo).
+  // Compatibilidad: sin `cronometro`, un `tiempo` > 0 equivale a cuenta atrás.
+  const modoCrono = () => opc.cronometro || (opc.tiempo > 0 ? 'atras' : 'ninguno');
   function reloj() {
     clearInterval(relojId);
-    const vistos = opc.tiempo > 0;
-    elTiempo.hidden = !vistos;
+    const modo = modoCrono();
+    elTiempo.hidden = modo === 'ninguno';
     const pintar = () => {
-      if (!vistos) return;
+      if (modo === 'ninguno') return;
       elTiempo.textContent = '⏱ ' + fmtTiempo(Math.max(0, restante));
-      elTiempo.classList.toggle('urgente', restante <= 10);
+      elTiempo.classList.toggle('urgente', modo === 'atras' && restante <= 10);
     };
-    restante = opc.tiempo || 0;
+    restante = modo === 'atras' ? (opc.tiempo || 60) : 0;
     pintar();
     relojId = setInterval(() => {
       if (terminado) return;
-      if (vistos) {
+      if (modo === 'adelante') { restante++; pintar(); }
+      else if (modo === 'atras') {
         restante--; pintar();
         if (restante <= 5 && restante > 0) sonido.aviso();
         if (restante <= 0) { clearInterval(relojId); (juego && juego.alAgotarTiempo) ? juego.alAgotarTiempo() : terminar({ motivo: 'tiempo' }); }
       }
     }, 1000);
   }
+
+  // Anti-trampas: desenfoca el juego mientras la pestaña o la ventana no están activas.
+  const desenfocar = (v) => area.classList.toggle('borroso', !!opc.borroso && v);
+  const alPerder = () => desenfocar(true), alVolver = () => desenfocar(false);
+  const alVisibilidad = () => desenfocar(document.hidden);
+  window.addEventListener('blur', alPerder); window.addEventListener('focus', alVolver); document.addEventListener('visibilitychange', alVisibilidad);
 
   function inicio() {
     limpiar(capa); capa.hidden = false; capa.className = 'esc-capa esc-inicio';
@@ -122,6 +132,7 @@ export function montarEscenario(cont, { plantilla, titulo, tipo, datos, opciones
     clearInterval(relojId);
     if (juego && juego.destruir) { try { juego.destruir(); } catch (_) {} }
     const segs = Math.round((Date.now() - t0) / 1000);
+    area.classList.remove('borroso');
     const res = { puntos, aciertos, errores, segundos: segs, ...extra };
     const buen = extra.motivo !== 'vidas' && extra.motivo !== 'tiempo' || puntos > 0;
     if (buen) { sonido.fin(); sonido.confeti(80); } else sonido.derrota();
@@ -170,6 +181,7 @@ export function montarEscenario(cont, { plantilla, titulo, tipo, datos, opciones
     setOpciones(o) { opc = { ...o }; },
     reiniciar,
     destruir() {
+      window.removeEventListener('blur', alPerder); window.removeEventListener('focus', alVolver); document.removeEventListener('visibilitychange', alVisibilidad);
       clearInterval(relojId);
       if (juego && juego.destruir) { try { juego.destruir(); } catch (_) {} }
       raiz.remove();

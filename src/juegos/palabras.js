@@ -168,7 +168,7 @@ const sopa = {
   id: 'sopa', nombre: 'Sopa de letras', icono: '🔎', color: '#457b9d',
   descripcion: 'Las palabras están escondidas en una cuadrícula de letras. Encuéntralas lo más rápido que puedas.',
   acepta: ['lista', 'pares'], minimo: 2, imprimible: true,
-  opciones: [{ k: 'dirs', etiqueta: 'Direcciones', tipo: 'opcion', def: 'todas', opciones: [{ v: 'todas', t: 'Todas (con diagonales y al revés)' }, { v: 'basicas', t: 'Solo horizontal y vertical' }] }, { k: 'pistas', etiqueta: 'Mostrar la lista de palabras', tipo: 'check', def: true }, OPC.tiempo(0)],
+  opciones: [{ k: 'dirs', grupo: 'formato', etiqueta: 'Direcciones', tipo: 'opcion', def: 'todas', opciones: [{ v: 'todas', t: 'Todas (con diagonales y al revés)' }, { v: 'basicas', t: 'Solo horizontal y vertical' }] }, { k: 'pistas', grupo: 'formato', etiqueta: 'Mostrar la lista de palabras', tipo: 'check', def: true }, OPC.tiempo(0)],
   montar(h) {
     const palabras = comoPalabras(h).map((r) => r.palabra);
     const S = generarSopa(palabras, { dirs: h.opciones.dirs });
@@ -311,7 +311,7 @@ const escribe = {
   id: 'escribe', nombre: 'Escribe la respuesta', icono: '⌨️', color: '#f4a261',
   descripcion: 'Escribe la respuesta correcta para cada pista o pregunta.',
   acepta: ['pares'], minimo: 1, imprimible: false,
-  opciones: [OPC.alea(true, 'Preguntas en orden aleatorio'), { k: 'acentos', etiqueta: 'Ignorar mayúsculas y tildes', tipo: 'check', def: true }, { k: 'intentos', etiqueta: 'Intentos por pregunta', tipo: 'rango', min: 1, max: 5, paso: 1, def: 2 }, OPC.tiempo(0)],
+  opciones: [OPC.alea(true, 'Preguntas en orden aleatorio'), { k: 'acentos', grupo: 'maestria', etiqueta: 'Ignorar mayúsculas y tildes', tipo: 'check', def: true }, { k: 'intentos', grupo: 'maestria', etiqueta: 'Intentos por pregunta', tipo: 'rango', min: 1, max: 5, paso: 1, def: 2 }, OPC.tiempo(0)],
   montar(h) {
     const T = temporizadores();
     let rondas = h.datos.map((x) => (h.tipo === 'pares' ? { p: { t: x.a, img: x.imgA }, r: String(x.b) } : { p: { t: x.q, img: x.img }, r: (x.resp.find((z) => z.ok) || {}).t || '' }));
@@ -398,7 +398,7 @@ const imanes = {
   id: 'imanes', nombre: 'Imanes de palabras', icono: '🧲', color: '#ef476f',
   descripcion: 'Arrastra las palabras o letras hasta la línea para formar las frases.',
   acepta: ['oraciones', 'lista', 'pares'], minimo: 1, imprimible: false,
-  opciones: [OPC.alea(true, 'Frases en orden aleatorio'), { k: 'letras', etiqueta: 'Usar letras en vez de palabras', tipo: 'check', def: false }, OPC.tiempo(0)],
+  opciones: [OPC.alea(true, 'Frases en orden aleatorio'), { k: 'letras', grupo: 'formato', etiqueta: 'Usar letras en vez de palabras', tipo: 'check', def: false }, OPC.tiempo(0)],
   montar(h) {
     const T = temporizadores();
     let frases = h.datos.map((x) => String(x.t ?? x.b ?? x.q ?? '')).filter((t) => t.replace(/[\[\]\s]/g, '').length >= 2);

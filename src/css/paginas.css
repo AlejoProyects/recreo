@@ -99,3 +99,19 @@
 .etiqueta-btn.act, .etiqueta-btn:hover { background: var(--azul); color: #fff; border-color: var(--azul); }
 .aviso-ajena { background: #fff8e1; border: 1px solid #f0d98a; padding: 10px 16px; margin-bottom: 14px; display: flex; gap: 14px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
 .tabla-scroll { overflow-x: auto; }
+
+/* Pestañas bajo el juego y panel de configuración */
+.pestanas { padding: 0; }
+.pestana-lista { display: flex; gap: 6px; padding: 0 22px; border-bottom: 1px solid var(--linea); overflow-x: auto; }
+.pestana { background: none; border: none; border-bottom: 3px solid transparent; padding: 16px 12px 12px; font-size: 18px; font-weight: 700; color: var(--gris); white-space: nowrap; }
+.pestana.act { color: var(--tinta); border-color: var(--azul); }
+.pestana-cuerpo { padding: 22px; }
+.config { display: grid; gap: 6px; }
+.cfg-seccion { border: 1px solid var(--linea); padding: 12px 18px 8px; margin-bottom: 12px; }
+.cfg-seccion h4 { color: var(--gris); font-size: 16px; margin-bottom: 8px; }
+.cfg-fila { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 6px 0; }
+.cfg-fila.chk { justify-content: flex-start; }
+.cfg-sel select { max-width: 320px; }
+.cfg-rango { flex-wrap: wrap; } .cfg-rango label { display: flex; gap: 10px; flex: 1 1 200px; justify-content: space-between; font-weight: 600; } .cfg-rango input { flex: 1 1 200px; }
+.cfg-tiempo { justify-content: flex-start; } .cfg-tiempo input { width: 80px; }
+.cfg-botones { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }

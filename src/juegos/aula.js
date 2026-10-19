@@ -9,8 +9,8 @@ const plano = {
   descripcion: 'Reparte a los alumnos por los pupitres al azar. Toca dos pupitres para intercambiar a sus ocupantes.',
   acepta: ['lista'], minimo: 2, imprimible: true,
   opciones: [
-    { k: 'columnas', etiqueta: 'Pupitres por fila', tipo: 'rango', min: 2, max: 10, paso: 1, def: 5 },
-    { k: 'barajar', etiqueta: 'Barajar al empezar', tipo: 'check', def: true }
+    { k: 'columnas', grupo: 'formato', etiqueta: 'Pupitres por fila', tipo: 'rango', min: 2, max: 10, paso: 1, def: 5 },
+    { k: 'barajar', grupo: 'anti', etiqueta: 'Barajar al empezar', tipo: 'check', def: true }
   ],
   montar(h) {
     let alumnos = h.datos.map((x) => ({ t: x.t, img: x.img }));

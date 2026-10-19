@@ -7,7 +7,7 @@ import { plantillaPorId } from '../plantillas.js';
 import { iconoPlantilla } from './crear.js';
 import { cuenta } from '../core/contenido.js';
 import { actividades } from '../core/almacen.js';
-import { valoresPorDefecto } from '../juegos/ayudas.js';
+import { opcionesIniciales } from '../juegos/ayudas.js';
 import { ir } from '../core/router.js';
 import { importarArchivo } from './mis.js';
 
@@ -34,7 +34,7 @@ export function vistaComunidad(raiz) {
         el('div', { class: 'fila' }, [
           el('a', { class: 'btn btn-mini', text: '▶ Jugar', attrs: { href: '#/e/' + e.id } }),
           el('button', { class: 'btn btn-claro btn-mini', text: 'Copiar y editar', on: { click: async () => {
-            const act = { ...JSON.parse(JSON.stringify(e)), id: uid(), opciones: valoresPorDefecto(p.opciones), fuente: 'auto', creado: Date.now(), modificado: Date.now() };
+            const act = { ...JSON.parse(JSON.stringify(e)), id: uid(), opciones: opcionesIniciales(p), fuente: 'auto', creado: Date.now(), modificado: Date.now() };
             await actividades.guardar(act); aviso('Copia guardada en Mis actividades'); ir('/editar/' + act.id);
           } } })
         ])
