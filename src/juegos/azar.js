@@ -7,7 +7,7 @@ import { celda, OPC, temporizadores } from './ayudas.js';
 const cuestionario = {
   id: 'cuestionario', nombre: 'Cuestionario', icono: '❓', color: '#2ea8f5',
   descripcion: 'Una serie de preguntas de opción múltiple. Pulsa la respuesta correcta para continuar.',
-  acepta: ['quiz'], minimo: 1, imprimible: true,
+  acepta: ['quiz'], revision: true, minimo: 1, imprimible: true,
   opciones: [{ k: 'auto', grupo: 'ritmo', etiqueta: 'Continuar automáticamente tras marcar', tipo: 'check', def: true }, OPC.mostrarOk(true), OPC.alea(true, 'Barajar el orden de las preguntas'), OPC.aleaResp(),
     { k: 'letras', grupo: 'formato', etiqueta: 'Letras en respuestas', tipo: 'opcion', def: 'abc', opciones: [{ v: 'abc', t: 'A, B, C' }, { v: 'ninguno', t: 'Ninguno' }] }, OPC.vidas(0)],
   montar(h) {
@@ -35,8 +35,10 @@ const cuestionario = {
       if (h.opciones.auto === false) caja.append(el('button', { class: 'e-btn quiz-sig', text: 'Siguiente ▶', on: { click: sig } }));
       else T.esperar(sig, ms);
     }
+    const visto = new Set();
     function responder(r, btn, q) {
       if (bloqueado || btn.disabled) return;
+      if (!visto.has(q)) { visto.add(q); h.revisar({ q: q.q, tu: r.t, ok: r.ok, correcta: (q.resp.find((x) => x.ok) || {}).t }); }
       if (r.ok) {
         bloqueado = true; btn.classList.add('ok'); h.acierto(1);
         avanzar(650);
@@ -215,12 +217,14 @@ const abrecajas = {
   id: 'abrecajas', nombre: 'Abrecajas', icono: '📦', color: '#f6a623',
   descripcion: 'Toca cada caja una por una para abrirlas y descubrir el elemento que hay en su interior.',
   acepta: ['lista', 'pares', 'quiz', 'grupos', 'oraciones'], minimo: 2, imprimible: false,
-  opciones: [OPC.alea(true, 'Elementos en orden aleatorio')],
+  opciones: [OPC.alea(true, 'Barajar el orden de los elementos'),
+    { k: 'columnas', grupo: 'formato', etiqueta: 'Columnas', tipo: 'rango', min: 0, max: 8, paso: 1, def: 0, cero: 'Automático' },
+    { k: 'filas', grupo: 'formato', etiqueta: 'Filas', tipo: 'rango', min: 0, max: 8, paso: 1, def: 0, cero: 'Automático' }],
   montar(h) {
     let items = h.datos.map((x) => ({ t: x.t ?? x.a ?? x.q ?? x.nombre ?? '', img: x.img ?? x.imgA ?? null, aud: x.aud ?? x.audA ?? null }));
     if (h.opciones.alea) items = barajar(items);
     let abiertas = 0;
-    const cols = Math.ceil(Math.sqrt(items.length * 1.6));
+    const cols = h.opciones.columnas > 0 ? h.opciones.columnas : h.opciones.filas > 0 ? Math.ceil(items.length / h.opciones.filas) : Math.ceil(Math.sqrt(items.length * 1.6));
     const grid = el('div', { class: 'cajas', style: { '--cols': cols } });
     const reveal = el('div', { class: 'cajas-reveal', attrs: { hidden: true } });
     grid.append(...items.map((it, k) => {
@@ -245,28 +249,36 @@ const cartas = {
   id: 'cartas', nombre: 'Cartas al azar', icono: '🃏', color: '#9b5de5',
   descripcion: 'Reparte tarjetas al azar de un mazo barajado.',
   acepta: ['lista', 'pares', 'quiz', 'grupos', 'oraciones'], minimo: 1, imprimible: false,
-  opciones: [{ k: 'repetir', etiqueta: 'Volver a barajar al terminar el mazo', tipo: 'check', def: false }],
+  opciones: [{ k: 'posiciones', grupo: 'modo', etiqueta: 'Número de posiciones a las que repartir', tipo: 'rango', min: 1, max: 6, paso: 1, def: 1 },
+    { k: 'repetir', grupo: 'modo', etiqueta: 'Volver a barajar al terminar el mazo', tipo: 'check', def: false }],
   montar(h) {
     const todos = h.datos.map((x) => ({ t: x.t ?? x.a ?? x.q ?? x.nombre ?? '', img: x.img ?? x.imgA ?? null, aud: x.aud ?? x.audA ?? null }));
-    let mazo = barajar(todos), vistas = 0;
+    const n = Math.max(1, h.opciones.posiciones || 1);
+    let mazo = barajar(todos), vistas = 0, dadas = false;
     const cont = el('div', { class: 'cartas' });
-    const carta = el('div', { class: 'carta' }, [el('div', { class: 'carta-dorso e-card', text: '?' }), el('div', { class: 'carta-cara e-card' })]);
+    const fila = el('div', { class: 'cartas-fila n' + Math.min(n, 6) });
+    const cartasEl = Array.from({ length: n }, () => el('div', { class: 'carta' }, [el('div', { class: 'carta-dorso e-card', text: '?' }), el('div', { class: 'carta-cara e-card' })]));
+    fila.append(...cartasEl);
     const info = el('div', { class: 'cartas-info' });
-    const btn = el('button', { class: 'e-btn cartas-btn', text: 'Repartir una carta', on: { click: repartir } });
-    cont.append(carta, info, btn);
+    const btn = el('button', { class: 'e-btn cartas-btn', text: n > 1 ? 'Repartir cartas' : 'Repartir una carta', on: { click: repartir } });
+    cont.append(fila, info, btn);
     h.raiz.appendChild(cont);
     const total = () => todos.length;
     const pintarInfo = () => { info.textContent = `Quedan ${mazo.length} de ${total()} cartas`; h.progreso(vistas, total()); };
     function repartir() {
       if (!mazo.length) { if (h.opciones.repetir) mazo = barajar(todos); else return h.terminar(); }
-      const c = mazo.pop(); vistas++;
-      carta.classList.remove('vuelta');
+      const quitar = dadas;
+      cartasEl.forEach((c) => c.classList.remove('vuelta'));
       setTimeout(() => {
-        const cara = carta.querySelector('.carta-cara'); limpiar(cara); cara.append(celda(c.t, c.img, '', c.aud));
-        carta.classList.add('vuelta'); h.sonido.clic(); h.acierto(0, { sonar: false });
-        pintarInfo();
+        cartasEl.forEach((carta, k) => {
+          if (!mazo.length) return;
+          const c = mazo.pop(); vistas++;
+          const cara = carta.querySelector('.carta-cara'); limpiar(cara); cara.append(celda(c.t, c.img, '', c.aud));
+          setTimeout(() => carta.classList.add('vuelta'), k * 120);
+        });
+        dadas = true; h.sonido.clic(); h.acierto(0, { sonar: false }); pintarInfo();
         if (!mazo.length && !h.opciones.repetir) btn.textContent = 'Terminar';
-      }, carta.classList.contains('vuelta') ? 350 : 0);
+      }, quitar ? 350 : 0);
     }
     pintarInfo();
     return {};

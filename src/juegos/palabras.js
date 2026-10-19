@@ -104,7 +104,7 @@ const ahorcado = {
   id: 'ahorcado', nombre: 'Ahorcado', icono: '🪢', color: '#6d597a',
   descripcion: 'Intenta completar la palabra eligiendo las letras correctas.',
   acepta: ['lista', 'pares'], minimo: 1, imprimible: false,
-  opciones: [OPC.alea(true, 'Palabras en orden aleatorio'), { k: 'intentos', etiqueta: 'Fallos permitidos', tipo: 'rango', min: 3, max: 10, paso: 1, def: 6 }, OPC.tiempo(0)],
+  opciones: [OPC.alea(true, 'Barajar el orden de los elementos'), { k: 'puntuacion', grupo: 'maestria', etiqueta: 'Puntuación', tipo: 'opcion', def: 'elemento', opciones: [{ v: 'elemento', t: '1 punto por elemento' }, { v: 'intentos', t: 'Puntos por cada intento restante' }] }, { k: 'minusculas', grupo: 'formato', etiqueta: 'Letras minúsculas', tipo: 'check', def: false }, { k: 'intentos', grupo: 'modo', etiqueta: 'Fallos permitidos', tipo: 'rango', min: 3, max: 10, paso: 1, def: 6 }],
   montar(h) {
     const T = temporizadores();
     let rondas = comoPalabras(h); if (h.opciones.alea) rondas = barajar(rondas);
@@ -131,9 +131,9 @@ const ahorcado = {
       const svg = el('div', { class: 'ahor-dib', html: dibujo(0) });
       const pal = el('div', { class: 'ahor-pal' });
       const teclado = el('div', { class: 'ahor-teclado' });
-      const pintarPal = (revelar) => { limpiar(pal); [...palabra].forEach((c, k) => pal.append(c === ' ' ? el('span', { class: 'let-esp' }) : el('span', { class: 'ahor-c' + (revelar && !usadas.has(clave[k]) ? ' falta' : ''), text: usadas.has(clave[k]) || revelar ? c : '' }))); };
+      const pintarPal = (revelar) => { limpiar(pal); [...palabra].forEach((c, k) => pal.append(c === ' ' ? el('span', { class: 'let-esp' }) : el('span', { class: 'ahor-c' + (revelar && !usadas.has(clave[k]) ? ' falta' : ''), text: usadas.has(clave[k]) || revelar ? (h.opciones.minusculas ? c.toLowerCase() : c) : '' }))); };
       const teclas = [...LETRAS_ES].map((L) => {
-        const b = el('button', { class: 'e-btn ahor-t', text: L, on: { click: () => probar(L, b) } });
+        const b = el('button', { class: 'e-btn ahor-t', text: h.opciones.minusculas ? L.toLowerCase() : L, on: { click: () => probar(L, b) } });
         return b;
       });
       teclado.append(...teclas);
@@ -145,7 +145,7 @@ const ahorcado = {
         b.disabled = true; usadas.add(L);
         if (clave.includes(L)) {
           b.classList.add('ok'); h.sonido.acierto(); pintarPal(false);
-          if (clave.every((c, k) => palabra[k] === ' ' || usadas.has(c))) { ocupado = true; h.acierto(1, { sonar: false }); h.confeti(30); T.esperar(sig, 1200); }
+          if (clave.every((c, k) => palabra[k] === ' ' || usadas.has(c))) { ocupado = true; h.acierto(h.opciones.puntuacion === 'intentos' ? Math.max(1, max - fallos) : 1, { sonar: false }); h.confeti(30); T.esperar(sig, 1200); }
         } else {
           b.classList.add('mal'); fallos++; svg.innerHTML = dibujo(fallos); h.sonido.error();
           if (fallos >= max) { ocupado = true; h.fallo({ vida: false, sonar: false }); pintarPal(true); T.esperar(sig, 1800); }
@@ -310,7 +310,7 @@ const crucigrama = {
 const escribe = {
   id: 'escribe', nombre: 'Escribe la respuesta', icono: '⌨️', color: '#f4a261',
   descripcion: 'Escribe la respuesta correcta para cada pista o pregunta.',
-  acepta: ['pares'], minimo: 1, imprimible: false,
+  acepta: ['pares'], revision: true, minimo: 1, imprimible: false,
   opciones: [OPC.alea(true, 'Preguntas en orden aleatorio'), { k: 'acentos', grupo: 'maestria', etiqueta: 'Ignorar mayúsculas y tildes', tipo: 'check', def: true }, { k: 'intentos', grupo: 'maestria', etiqueta: 'Intentos por pregunta', tipo: 'rango', min: 1, max: 5, paso: 1, def: 2 }, OPC.tiempo(0)],
   montar(h) {
     const T = temporizadores();
@@ -331,10 +331,10 @@ const escribe = {
       setTimeout(() => entrada.focus(), 50);
       function comprobar() {
         if (ocupado || !entrada.value.trim()) return;
-        if (igual(entrada.value, r.r)) { ocupado = true; entrada.classList.add('ok'); msg.textContent = '¡Correcto!'; h.acierto(1); T.esperar(sig, 900); return; }
+        if (igual(entrada.value, r.r)) { ocupado = true; if (intentos === 0) h.revisar({ q: r.p.t || '(imagen)', tu: entrada.value, ok: true, correcta: r.r }); entrada.classList.add('ok'); msg.textContent = '¡Correcto!'; h.acierto(1); T.esperar(sig, 900); return; }
         intentos++; entrada.classList.add('mal'); T.esperar(() => entrada.classList.remove('mal'), 500);
         if (h.fallo()) return;
-        if (intentos >= (h.opciones.intentos || 2)) { ocupado = true; msg.textContent = 'Respuesta: ' + r.r; T.esperar(sig, 1800); }
+        if (intentos >= (h.opciones.intentos || 2)) { ocupado = true; h.revisar({ q: r.p.t || '(imagen)', tu: entrada.value, ok: false, correcta: r.r }); msg.textContent = 'Respuesta: ' + r.r; T.esperar(sig, 1800); }
         else { msg.textContent = 'Inténtalo de nuevo'; entrada.select(); }
       }
     }
@@ -452,7 +452,7 @@ const completar = {
   id: 'completar', nombre: 'Completar la frase', icono: '✍️', color: '#90be6d',
   descripcion: 'Una actividad "cloze": arrastra las palabras a los espacios en blanco dentro del texto.',
   acepta: ['oraciones'], soloNativa: true, minimo: 1, imprimible: true,
-  opciones: [OPC.alea(true, 'Frases en orden aleatorio'), OPC.tiempo(0), OPC.vidas(0)],
+  opciones: [OPC.alea(true, 'Barajar el orden de los elementos'), { k: 'alineacion', grupo: 'formato', etiqueta: 'Alineación', tipo: 'opcion', def: 'centro', opciones: [{ v: 'izq', t: 'Izquierda' }, { v: 'centro', t: 'Centrada' }] }, OPC.vidas(0)],
   montar(h) {
     const T = temporizadores();
     let frases = h.datos.map((x) => x.t).filter((t) => /\[[^\]]+\]/.test(t));
@@ -466,7 +466,7 @@ const completar = {
       const partes = frases[i].split(/(\[[^\]]+\])/).filter((p) => p !== '');
       const huecos = partes.filter((p) => /^\[/.test(p)).map((p) => p.slice(1, -1).trim());
       let puestas = 0;
-      const texto = el('p', { class: 'cmp-texto e-card' }, partes.map((p) => (/^\[/.test(p) ? el('span', { class: 'destino cmp-hueco', dataset: { w: p.slice(1, -1).trim() } }) : p)));
+      const texto = el('p', { class: 'cmp-texto e-card' + (h.opciones.alineacion === 'izq' ? ' cmp-izq' : '') }, partes.map((p) => (/^\[/.test(p) ? el('span', { class: 'destino cmp-hueco', dataset: { w: p.slice(1, -1).trim() } }) : p)));
       const banco = el('div', { class: 'cmp-banco' }, barajar(huecos).map((w) => el('div', { class: 'chip e-btn cmp-w', text: w, dataset: { w } })));
       cont.append(texto, banco);
       const ctl = activarArrastre(cont, {

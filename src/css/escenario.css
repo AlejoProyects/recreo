@@ -103,6 +103,12 @@
 .ficha.abierta .ficha-dorso, .ficha.hecha .ficha-dorso { transform: rotateY(180deg); }
 .ficha.abierta .ficha-cara, .ficha.hecha .ficha-cara { transform: rotateY(360deg); }
 .ficha.hecha { opacity: .55; }
+.ficha.quitada { visibility: hidden; }
+.cartas-fila { display: flex; gap: 1em; justify-content: center; width: 100%; height: 60%; }
+.cartas-fila .carta { height: 100%; flex: 0 1 auto; max-width: 30%; }
+.cartas-fila.n1 .carta { max-width: 100%; }
+.cartas-fila.n4 .carta, .cartas-fila.n5 .carta, .cartas-fila.n6 .carta { font-size: .65em; max-width: 22%; }
+.cmp-izq { text-align: left; }
 
 /* Encuentra la pareja */
 .enc-q { padding: .6em 1.4em; font-size: 1.6em; font-weight: 800; margin-bottom: .8em; text-align: center; max-width: 90%; }
@@ -321,3 +327,9 @@
 /* Botón de audio dentro de las tarjetas */
 .celda-aud { background: rgba(0,0,0,.25); color: #fff; border: none; border-radius: 50%; width: 1.9em; height: 1.9em; font-size: .7em; line-height: 1; padding: 0; margin-top: .2em; }
 .celda-aud:hover { background: rgba(0,0,0,.5); }
+.conc-q.doble { outline: 3px solid #ffd400; }
+.e-btn.pista { box-shadow: 0 0 0 4px #ffd400; }
+.esc-revision { width: min(34em, 92%); max-height: 34%; overflow: auto; text-align: left; background: rgba(0,0,0,.3); border-radius: .5em; padding: .5em .9em; font-size: .8em; }
+.esc-revision ul { list-style: none; display: grid; gap: .25em; margin-top: .3em; }
+.esc-revision li { display: flex; flex-direction: column; } .esc-revision li small { opacity: .85; }
+.esc-revision .bien span { color: #7dff9b; } .esc-revision .mal span { color: #ff9b9b; }

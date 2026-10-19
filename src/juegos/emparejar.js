@@ -11,31 +11,42 @@ const une = {
   id: 'une', nombre: 'Une las parejas', icono: '🔗', color: '#e63946',
   descripcion: 'Arrastra y suelta cada palabra junto a su definición.',
   acepta: ['pares'], minimo: 2, imprimible: true,
-  opciones: [OPC.alea(true, 'Barajar las parejas'), OPC.tiempo(0), OPC.vidas(0)],
+  opciones: [OPC.alea(true, 'Barajar el orden de los elementos'), { k: 'porPagina', grupo: 'formato', etiqueta: 'Coincidencias por página', tipo: 'rango', min: 2, max: 10, paso: 1, def: 4 }, OPC.vidas(0)],
   montar(h) {
     const T = temporizadores();
-    const pares = h.opciones.alea ? barajar(h.datos) : h.datos.slice();
+    const todos = h.opciones.alea ? barajar(h.datos) : h.datos.slice();
+    const tam = Math.max(2, h.opciones.porPagina || 4);
+    const paginas = [];
+    for (let k = 0; k < todos.length; k += tam) paginas.push(todos.slice(k, k + tam));
+    if (paginas.length > 1 && paginas[paginas.length - 1].length < 2) { const ult = paginas.pop(); paginas[paginas.length - 1].push(...ult); } // evita una página de una sola pareja
+    let pag = 0, hechasPag = 0, hechas = 0;
     const cont = el('div', { class: 'une' });
     const chips = el('div', { class: 'une-chips' });
     const filas = el('div', { class: 'une-filas' });
     cont.append(chips, filas);
     h.raiz.appendChild(cont);
-    let hechas = 0;
-    barajar(pares).forEach((p) => chips.append(el('div', { class: 'chip e-btn', dataset: { id: p.id } }, [celda(p.a, p.imgA, '', p.audA)])));
-    pares.forEach((p) => filas.append(el('div', { class: 'une-fila' }, [
-      el('div', { class: 'destino', dataset: { id: p.id } }),
-      el('div', { class: 'une-def e-card' }, [celda(p.b, p.imgB, '', p.audB)])
-    ])));
-    h.progreso(0, pares.length);
+    function pintarPagina() {
+      limpiar(chips); limpiar(filas); hechasPag = 0;
+      const ps = paginas[pag];
+      barajar(ps).forEach((p) => chips.append(el('div', { class: 'chip e-btn', dataset: { id: p.id } }, [celda(p.a, p.imgA, '', p.audA)])));
+      ps.forEach((p) => filas.append(el('div', { class: 'une-fila' }, [
+        el('div', { class: 'destino', dataset: { id: p.id } }),
+        el('div', { class: 'une-def e-card' }, [celda(p.b, p.imgB, '', p.audB)])
+      ])));
+      h.progreso(hechas, todos.length);
+    }
     const ctl = activarArrastre(cont, {
       chip: '.chip', destino: '.destino', habilitado: (c) => !c.classList.contains('puesto'),
       alSoltar(c, d) {
         if (d.firstChild) return false;
-        const pc = pares.find((x) => x.id === c.dataset.id), pd = pares.find((x) => x.id === d.dataset.id);
+        const pc = todos.find((x) => x.id === c.dataset.id), pd = todos.find((x) => x.id === d.dataset.id);
         const bien = pc.id === pd.id || (pc.b === pd.b && pc.imgB === pd.imgB);
         if (bien) {
-          c.classList.add('puesto', 'ok'); d.append(c); hechas++; h.acierto(1); h.progreso(hechas, pares.length);
-          if (hechas >= pares.length) T.esperar(() => h.terminar(), 700);
+          c.classList.add('puesto', 'ok'); d.append(c); hechas++; hechasPag++; h.acierto(1); h.progreso(hechas, todos.length);
+          if (hechasPag >= paginas[pag].length) {
+            if (pag + 1 >= paginas.length) T.esperar(() => h.terminar(), 700);
+            else T.esperar(() => { pag++; pintarPagina(); }, 800);
+          }
           return true;
         }
         c.classList.add('tiembla'); T.esperar(() => c.classList.remove('tiembla'), 500);
@@ -43,6 +54,7 @@ const une = {
         return false;
       }
     });
+    pintarPagina();
     return { destruir: () => T.limpiar() };
   }
 };
@@ -52,15 +64,16 @@ const memoria = {
   id: 'parejas', nombre: 'Parejas', icono: '🧠', color: '#2a9d8f',
   descripcion: 'Toca un par de fichas a la vez para descubrir si son iguales.',
   acepta: ['pares'], minimo: 2, imprimible: false,
-  opciones: [OPC.tiempo(0)],
+  opciones: [{ k: 'numeros', grupo: 'formato', etiqueta: 'Mostrar números en fichas', tipo: 'check', def: false }, { k: 'eliminar', grupo: 'modo', etiqueta: 'Las fichas se eliminan tras descubrirse', tipo: 'check', def: false }],
   montar(h) {
     const T = temporizadores();
+    let nFicha = 0;
     const fichas = barajar(h.datos.flatMap((p) => [{ pid: p.id, ...lado(p, 'a') }, { pid: p.id, ...lado(p, 'b') }]));
     const cols = Math.ceil(Math.sqrt(fichas.length * 1.5));
     const grid = el('div', { class: 'memo', style: { '--cols': cols } });
     let abiertas = [], bloqueo = false, hechas = 0;
     fichas.forEach((f) => {
-      const b = el('button', { class: 'ficha' }, [el('div', { class: 'ficha-dorso e-card', text: '?' }), el('div', { class: 'ficha-cara e-card' }, [celda(f.t, f.img, '', f.aud)])]);
+      const b = el('button', { class: 'ficha' }, [el('div', { class: 'ficha-dorso e-card', text: h.opciones.numeros ? String(++nFicha) : '?' }), el('div', { class: 'ficha-cara e-card' }, [celda(f.t, f.img, '', f.aud)])]);
       b.onclick = () => {
         if (bloqueo || b.classList.contains('abierta') || b.classList.contains('hecha')) return;
         b.classList.add('abierta'); h.sonido.clic(); abiertas.push({ b, f });
@@ -68,7 +81,7 @@ const memoria = {
           bloqueo = true;
           const [x, y] = abiertas;
           if (x.f.pid === y.f.pid) {
-            T.esperar(() => { x.b.classList.add('hecha'); y.b.classList.add('hecha'); hechas++; h.acierto(1); h.progreso(hechas, h.datos.length); abiertas = []; bloqueo = false; if (hechas >= h.datos.length) h.terminar(); }, 500);
+            T.esperar(() => { x.b.classList.add('hecha'); y.b.classList.add('hecha'); if (h.opciones.eliminar) { x.b.classList.add('quitada'); y.b.classList.add('quitada'); } hechas++; h.acierto(1); h.progreso(hechas, h.datos.length); abiertas = []; bloqueo = false; if (hechas >= h.datos.length) h.terminar(); }, 500);
           } else {
             h.fallo({ vida: false });
             T.esperar(() => { x.b.classList.remove('abierta'); y.b.classList.remove('abierta'); abiertas = []; bloqueo = false; }, 900);

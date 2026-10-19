@@ -12,7 +12,11 @@ Funciona 100 % en el navegador: no hay servidor, cuentas ni límites de uso. El 
   Persecución en laberinto, Atrapa al topo, Avión, Explotar globos, Fruta voladora, Generador de matemáticas y Plano de asientos.
 - **35 estilos visuales** y 6 fuentes (incluida una apta para dislexia) en cada actividad, cambiables en vivo.
 - **Cambio de plantilla** con un clic: el contenido se adapta (p. ej. Parejas → Cuestionario → Sopa de letras).
-- Editor de contenido por tipo, con imágenes e importación de texto pegado.
+- Editor de contenido por tipo, con imágenes, **audio por elemento** (grabado con el micrófono) e importación de texto pegado.
+- **Configuración de actividad** como en el original: cronómetro (ninguno / hacia adelante / cuenta atrás), control del ritmo, maestría (incluye *Mostrar respuestas al final*), anti-trampas (barajar y pantalla borrosa), formato y modo, con *Aplicar*, *Definir como predeterminado para la plantilla* y *Volver al predeterminado*.
+- **Mis actividades** con carpetas, papelera de reciclaje (30 días) y orden por nombre, modificadas o última vez jugada.
+- **Publicar**: franja de edad, asignatura y tema; la Comunidad filtra por esas etiquetas.
+- Pantalla de inicio con **Avance** (vista previa del contenido) y **Juego**.
 - **Imprimir** cualquier actividad (hoja limpia; crucigrama y sopa de letras con su propia hoja).
 - **Compartir** por enlace (el contenido viaja comprimido dentro del enlace) o por archivo, **incrustar** con `<iframe>`.
 - **Tareas**: enlace para alumnos → código de resultado → importación en *Mis resultados* (con exportación a CSV).

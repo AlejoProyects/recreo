@@ -198,7 +198,7 @@ const laberinto = {
   id: 'laberinto', nombre: 'Persecución en laberinto', icono: '👾', color: '#6a4c93',
   descripcion: 'Corre hasta la zona con la respuesta correcta y escapa de los enemigos.',
   acepta: ['quiz'], minimo: 2, imprimible: false,
-  opciones: [OPC.velocidad(4), OPC.vidas(3), OPC.tiempo(0)],
+  opciones: [{ k: 'dificultad', grupo: 'modo', etiqueta: 'Dificultad', tipo: 'rango', min: 1, max: 5, paso: 1, def: 3 }, OPC.vidas(3)],
   montar(h) {
     const qs = preparar(h).map((q) => ({ ...q, resp: q.resp.slice(0, 4) })); let i = 0;
     const W = MAPA[0].length, H = MAPA.length;
@@ -210,7 +210,7 @@ const laberinto = {
     cont.append(preg, leyenda, canvas, dpad);
     const libre = (x, y) => y >= 0 && y < H && x >= 0 && x < W && MAPA[y][x] !== '#';
     let jug, enemigos, zonas, tPaso = 0, inmune = 0;
-    const inicio = () => { jug = { x: 7, y: 5 }; enemigos = [{ x: 7, y: 1 }, { x: 1, y: 3 }, { x: 13, y: 3 }].slice(0, 2 + (h.opciones.velocidad > 6 ? 1 : 0)); inmune = 1.2; };
+    const inicio = () => { jug = { x: 7, y: 5 }; enemigos = [{ x: 7, y: 1 }, { x: 1, y: 3 }, { x: 13, y: 3 }].slice(0, 1 + Math.ceil((h.opciones.dificultad || 3) / 2)); inmune = 1.2; };
     function pregunta() {
       const q = qs[i]; limpiar(preg); preg.append(celda(q.q, q.img)); h.progreso(i, qs.length);
       zonas = q.resp.map((r, k) => ({ x: ZONAS[k][0], y: ZONAS[k][1], c: ZONAS[k][2], r }));
@@ -255,7 +255,7 @@ const laberinto = {
     const parar = bucle((dt) => {
       inmune = Math.max(0, inmune - dt); tPaso += dt; tJug += dt;
       if (dir && tJug > 0.16) { tJug = 0; intentar(...dir); }
-      if (tPaso > Math.max(0.28, 0.75 - (h.opciones.velocidad || 4) * 0.05)) { tPaso = 0; moverEnemigos(); revisar(); }
+      if (tPaso > Math.max(0.25, 0.95 - (h.opciones.dificultad || 3) * 0.12)) { tPaso = 0; moverEnemigos(); revisar(); }
       dibujar();
     });
     return { destruir: () => { parar(); window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); } };

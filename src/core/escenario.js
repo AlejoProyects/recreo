@@ -37,7 +37,7 @@ export function montarEscenario(cont, { plantilla, titulo, tipo, datos, opciones
   let juego = null;
   let terminado = false;
   let puntos = 0, aciertos = 0, errores = 0, vidas = 0;
-  let t0 = 0, relojId = null, restante = 0, nombreTarea = '';
+  let t0 = 0, relojId = null, restante = 0, nombreTarea = '', revisiones = [];
 
   const elTiempo = el('span', { class: 'esc-stat esc-tiempo', attrs: { hidden: true } });
   const elVidas = el('span', { class: 'esc-stat', attrs: { hidden: true } });
@@ -76,6 +76,8 @@ export function montarEscenario(cont, { plantilla, titulo, tipo, datos, opciones
     puntuar(d) { puntos += d; pintarStats(); },
     fijarPuntos(n) { puntos = n; pintarStats(); },
     progreso(h, t) { elProgreso.textContent = t ? `${h} / ${t}` : ''; },
+    // registra una respuesta para "Mostrar respuestas al final": {q, tu, ok, correcta?}
+    revisar(e) { revisiones.push(e); },
     terminar
   };
 
@@ -142,7 +144,7 @@ export function montarEscenario(cont, { plantilla, titulo, tipo, datos, opciones
     terminado = false; puntos = aciertos = errores = 0; vidas = opc.vidas || 0;
     pintarStats(); elProgreso.textContent = '';
     limpiar(area);
-    t0 = Date.now();
+    t0 = Date.now(); revisiones = [];
     if (alIniciar) alIniciar();
     try { juego = plantilla.montar(host) || {}; }
     catch (e) { console.error(e); area.append(el('p', { class: 'esc-error', text: 'No se pudo iniciar: ' + e.message })); juego = {}; }
@@ -185,6 +187,7 @@ export function montarEscenario(cont, { plantilla, titulo, tipo, datos, opciones
       ]),
       alTerminar && !tarea ? el('div', { class: 'esc-guardar' }, [nombre, guardar]) : null,
       codigo,
+      opc.mostrarRespuestas && revisiones.length ? el('div', { class: 'esc-revision' }, [el('b', { text: 'Tus respuestas' }), el('ul', {}, revisiones.map((r) => el('li', { class: r.ok ? 'bien' : 'mal' }, [el('span', { text: (r.ok ? '✔ ' : '✘ ') + r.q }), el('small', { text: r.ok ? r.tu : `${r.tu || '(sin responder)'} → ${r.correcta}` })])))]) : null,
       el('button', { class: 'esc-btn-grande', text: '↻ Jugar de nuevo', on: { click: reiniciar } })
     ].filter(Boolean));
   }
