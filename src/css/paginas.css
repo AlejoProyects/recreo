@@ -146,3 +146,10 @@
 .filtro-fila { display: grid; grid-template-columns: 140px 1fr; gap: 10px; align-items: start; margin-bottom: 8px; }
 .filtro-fila .fila { flex-wrap: wrap; }
 @media (max-width: 800px) { .filtro-fila { grid-template-columns: 1fr; } }
+
+/* Audio en el editor */
+.ed-aud { display: inline-flex; align-items: center; flex: none; }
+.ed-aud .ed-img { width: 40px; height: 40px; }
+.ed-rec { background: #ff4d4d !important; color: #fff; border: none !important; animation: pulso-rec 1s infinite alternate; }
+@keyframes pulso-rec { to { opacity: .55; } }
+.ed-aud-x { width: 22px; height: 22px; font-size: 12px; margin-left: -6px; }

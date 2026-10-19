@@ -8,6 +8,7 @@ import { TIPOS, nuevoItem, contenidoVacio, cuenta } from '../core/contenido.js';
 import { actividades } from '../core/almacen.js';
 import { ir } from '../core/router.js';
 import { opcionesIniciales } from '../juegos/ayudas.js';
+import { botonAudio } from './audio-editor.js';
 import { estiloRecordado } from './selectores.js';
 
 // ---- imágenes: se reducen a 640 px para no inflar el almacenamiento ----
@@ -60,7 +61,7 @@ const EDITORES = {
         el('div', { class: 'ed-cuerpo' }, [
           el('div', { class: 'ed-linea' }, [
             el('textarea', { attrs: { rows: 1, placeholder: 'Pregunta' }, value: q.q, on: { input: (e) => { q.q = e.target.value; } } }),
-            botonImagen(q, 'img')
+            botonAudio(q, 'aud'), botonImagen(q, 'img')
           ]),
           ...q.resp.map((r, ri) => el('div', { class: 'ed-linea ed-resp' }, [
             el('input', { attrs: { type: 'radio', name: radios, title: 'Respuesta correcta' }, checked: r.ok, on: { change: () => { q.resp.forEach((x, k) => { x.ok = k === ri; }); } } }),
@@ -77,15 +78,15 @@ const EDITORES = {
     host.append(el('div', { class: 'ed-cab' }, [el('span'), el('b', { text: 'Término / pregunta' }), el('b', { text: 'Definición / respuesta' }), el('span')]));
     c.forEach((p, i) => host.append(el('div', { class: 'ed-fila ed-par' }, [
       el('span', { class: 'ed-n', text: String(i + 1) }),
-      el('div', { class: 'ed-linea' }, [el('input', { attrs: { type: 'text' }, value: p.a, on: { input: (e) => { p.a = e.target.value; } } }), botonImagen(p, 'imgA')]),
-      el('div', { class: 'ed-linea' }, [el('input', { attrs: { type: 'text' }, value: p.b, on: { input: (e) => { p.b = e.target.value; } } }), botonImagen(p, 'imgB')]),
+      el('div', { class: 'ed-linea' }, [el('input', { attrs: { type: 'text' }, value: p.a, on: { input: (e) => { p.a = e.target.value; } } }), botonAudio(p, 'audA'), botonImagen(p, 'imgA')]),
+      el('div', { class: 'ed-linea' }, [el('input', { attrs: { type: 'text' }, value: p.b, on: { input: (e) => { p.b = e.target.value; } } }), botonAudio(p, 'audB'), botonImagen(p, 'imgB')]),
       quitar(() => { c.splice(i, 1); repintar(); })
     ])));
   },
   lista(c, host, repintar) {
     c.forEach((it, i) => host.append(el('div', { class: 'ed-fila' }, [
       el('span', { class: 'ed-n', text: String(i + 1) }),
-      el('div', { class: 'ed-linea ed-cuerpo' }, [el('input', { attrs: { type: 'text' }, value: it.t, on: { input: (e) => { it.t = e.target.value; } } }), botonImagen(it, 'img')]),
+      el('div', { class: 'ed-linea ed-cuerpo' }, [el('input', { attrs: { type: 'text' }, value: it.t, on: { input: (e) => { it.t = e.target.value; } } }), botonAudio(it, 'aud'), botonImagen(it, 'img')]),
       quitar(() => { c.splice(i, 1); repintar(); })
     ])));
   },

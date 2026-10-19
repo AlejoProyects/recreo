@@ -18,7 +18,7 @@ async function copiar(texto) {
   try { await navigator.clipboard.writeText(texto); aviso('Copiado al portapapeles'); }
   catch (_) { aviso('No se pudo copiar automáticamente; selecciónalo y copia con Ctrl+C'); }
 }
-const tieneImagenes = (act) => JSON.stringify(act.contenido).includes('data:image');
+const tieneImagenes = (act) => /data:(image|audio)/.test(JSON.stringify(act.contenido));
 
 // Enlace compartible. Si incluye imágenes puede ser muy largo: se ofrece también la versión sin imágenes.
 async function enlaceDe(act, { imagenes, tarea } = {}) {
@@ -38,7 +38,7 @@ export async function compartir(act, { propia = false, alGuardar = null } = {}) 
     return url;
   };
   const hay = tieneImagenes(act);
-  const chk = hay ? el('label', { class: 'chk' }, [el('input', { attrs: { type: 'checkbox' }, on: { change: (e) => { conImg = e.target.checked; pintar(); } } }), ' Incluir las imágenes (el enlace será mucho más largo)']) : null;
+  const chk = hay ? el('label', { class: 'chk' }, [el('input', { attrs: { type: 'checkbox' }, on: { change: (e) => { conImg = e.target.checked; pintar(); } } }), ' Incluir imágenes y audios (el enlace será mucho más largo)']) : null;
 
   // Datos para publicar (solo en actividades propias): título, franja de edad, asignatura, tema y visibilidad.
   let meta = null, cuerpoMeta = null;

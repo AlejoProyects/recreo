@@ -93,7 +93,7 @@ export function generarMates(c) {
 
 const ADAPT = {
   'mates>quiz': (c) => generarMates(c),
-  'quiz>pares': (c) => c.map((x) => ({ id: uid(), a: x.q, imgA: x.img, b: (x.resp.find((r) => r.ok) || {}).t || '', imgB: null })),
+  'quiz>pares': (c) => c.map((x) => ({ id: uid(), a: x.q, imgA: x.img, audA: x.aud, b: (x.resp.find((r) => r.ok) || {}).t || '', imgB: null })),
   'quiz>oraciones': (c) => c.map((x) => ({ id: uid(), t: x.q })),
   'quiz>vf': (c) => c.flatMap((x) => {
     const ok = x.resp.find((r) => r.ok); const mal = x.resp.find((r) => !r.ok);
@@ -101,9 +101,9 @@ const ADAPT = {
   }),
   'pares>quiz': (c) => c.map((x, i) => {
     const otros = barajar(c.filter((_, j) => j !== i).map((o) => o.b).filter((b) => b && b !== x.b)).slice(0, 3);
-    return { id: uid(), q: x.a, img: x.imgA, resp: [{ t: x.b, ok: true }, ...otros.map((t) => ({ t, ok: false }))] };
+    return { id: uid(), q: x.a, img: x.imgA, aud: x.audA, resp: [{ t: x.b, ok: true }, ...otros.map((t) => ({ t, ok: false }))] };
   }).filter((q) => q.resp.length >= 2),
-  'pares>lista': (c) => c.map((x) => ({ id: uid(), t: x.a, img: x.imgA })),
+  'pares>lista': (c) => c.map((x) => ({ id: uid(), t: x.a, img: x.imgA, aud: x.audA })),
   'pares>vf': (c) => c.flatMap((x, i) => {
     const otro = c[(i + 1) % c.length];
     return [{ id: uid(), t: `${x.a} → ${x.b}`, ok: true }, c.length > 1 && otro.b !== x.b ? { id: uid(), t: `${x.a} → ${otro.b}`, ok: false } : null].filter(Boolean);

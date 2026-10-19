@@ -3,11 +3,20 @@
 import { el } from '../core/util.js';
 import { pref } from '../core/almacen.js';
 
-// Celda con imagen y/o texto (lo que se muestra en tarjetas, botones, etc.)
-export function celda(t, img, clase = '') {
+// Reproduce un audio (data URL); uno a la vez.
+let sonando = null;
+export function reproducir(src) {
+  if (sonando) sonando.pause();
+  sonando = new Audio(src);
+  sonando.play().catch(() => {});
+}
+
+// Celda con imagen y/o texto (lo que se muestra en tarjetas, botones, etc.) y, si hay, un botón de audio.
+export function celda(t, img, clase = '', aud = null) {
   return el('div', { class: 'celda ' + clase }, [
     img ? el('img', { attrs: { src: img, alt: '', draggable: 'false' } }) : null,
-    t ? el('span', { text: t }) : null
+    t ? el('span', { text: t }) : null,
+    aud ? el('button', { class: 'celda-aud', attrs: { type: 'button', title: 'Escuchar' }, text: '\u{1F50A}', on: { click: (e) => { e.stopPropagation(); reproducir(aud); }, pointerdown: (e) => e.stopPropagation() } }) : null
   ]);
 }
 

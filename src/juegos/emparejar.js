@@ -4,7 +4,7 @@ import { el, limpiar, barajar } from '../core/util.js';
 import { celda, OPC, temporizadores } from './ayudas.js';
 import { activarArrastre } from './arrastrar.js';
 
-const lado = (p, k) => ({ t: p[k], img: p[k === 'a' ? 'imgA' : 'imgB'] });
+const lado = (p, k) => ({ t: p[k], img: p[k === 'a' ? 'imgA' : 'imgB'], aud: p[k === 'a' ? 'audA' : 'audB'] });
 
 // ---------- Une las parejas ----------
 const une = {
@@ -21,10 +21,10 @@ const une = {
     cont.append(chips, filas);
     h.raiz.appendChild(cont);
     let hechas = 0;
-    barajar(pares).forEach((p) => chips.append(el('div', { class: 'chip e-btn', dataset: { id: p.id } }, [celda(p.a, p.imgA)])));
+    barajar(pares).forEach((p) => chips.append(el('div', { class: 'chip e-btn', dataset: { id: p.id } }, [celda(p.a, p.imgA, '', p.audA)])));
     pares.forEach((p) => filas.append(el('div', { class: 'une-fila' }, [
       el('div', { class: 'destino', dataset: { id: p.id } }),
-      el('div', { class: 'une-def e-card' }, [celda(p.b, p.imgB)])
+      el('div', { class: 'une-def e-card' }, [celda(p.b, p.imgB, '', p.audB)])
     ])));
     h.progreso(0, pares.length);
     const ctl = activarArrastre(cont, {
@@ -60,7 +60,7 @@ const memoria = {
     const grid = el('div', { class: 'memo', style: { '--cols': cols } });
     let abiertas = [], bloqueo = false, hechas = 0;
     fichas.forEach((f) => {
-      const b = el('button', { class: 'ficha' }, [el('div', { class: 'ficha-dorso e-card', text: '?' }), el('div', { class: 'ficha-cara e-card' }, [celda(f.t, f.img)])]);
+      const b = el('button', { class: 'ficha' }, [el('div', { class: 'ficha-dorso e-card', text: '?' }), el('div', { class: 'ficha-cara e-card' }, [celda(f.t, f.img, '', f.aud)])]);
       b.onclick = () => {
         if (bloqueo || b.classList.contains('abierta') || b.classList.contains('hecha')) return;
         b.classList.add('abierta'); h.sonido.clic(); abiertas.push({ b, f });
@@ -167,7 +167,7 @@ const flash = {
       limpiar(carta); const p = mazo[0];
       const a = lado(p, 'a'), b = lado(p, 'b'); const frente = h.opciones.reverso ? b : a, dorso = h.opciones.reverso ? a : b;
       carta.classList.remove('vuelta');
-      carta.append(el('div', { class: 'carta-cara-f e-card' }, [celda(frente.t, frente.img)]), el('div', { class: 'carta-cara-d e-card' }, [celda(dorso.t, dorso.img)]));
+      carta.append(el('div', { class: 'carta-cara-f e-card' }, [celda(frente.t, frente.img, '', frente.aud)]), el('div', { class: 'carta-cara-d e-card' }, [celda(dorso.t, dorso.img, '', dorso.aud)]));
       h.progreso(sabidas, total);
     };
     carta.onclick = () => { carta.classList.toggle('vuelta'); h.sonido.clic(); };
@@ -191,11 +191,11 @@ const voltear = {
     const vistas = new Set();
     const grid = el('div', { class: 'vol-grid', style: { '--cols': Math.ceil(Math.sqrt(datos.length * 1.6)) } });
     const capa = el('div', { class: 'vol-capa', attrs: { hidden: true } });
-    datos.forEach((p, i) => grid.append(el('button', { class: 'e-btn vol-ficha', on: { click: () => abrir(p, i) } }, [celda(p.a, p.imgA)])));
+    datos.forEach((p, i) => grid.append(el('button', { class: 'e-btn vol-ficha', on: { click: () => abrir(p, i) } }, [celda(p.a, p.imgA, '', p.audA)])));
     h.raiz.append(grid, capa); h.progreso(0, datos.length);
     function abrir(p, i) {
       limpiar(capa); capa.hidden = false;
-      const c = el('div', { class: 'vol-carta' }, [el('div', { class: 'carta-cara-f e-card' }, [celda(p.a, p.imgA)]), el('div', { class: 'carta-cara-d e-card' }, [celda(p.b || '—', p.imgB)])]);
+      const c = el('div', { class: 'vol-carta' }, [el('div', { class: 'carta-cara-f e-card' }, [celda(p.a, p.imgA, '', p.audA)]), el('div', { class: 'carta-cara-d e-card' }, [celda(p.b || '—', p.imgB, '', p.audB)])]);
       c.onclick = (e) => { e.stopPropagation(); c.classList.toggle('vuelta'); h.sonido.clic(); };
       capa.append(c, el('small', { text: 'Toca la ficha para girarla · toca fuera para cerrar' }));
       capa.onclick = () => { capa.hidden = true; vistas.add(i); grid.children[i].classList.add('vista'); h.progreso(vistas.size, datos.length); if (vistas.size >= datos.length) h.terminar(); };

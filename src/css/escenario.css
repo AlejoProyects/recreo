@@ -317,3 +317,7 @@
 .esc-avance h3 { font-size: 1.5em; text-align: center; }
 .avance-lista { padding-left: 1.4em; display: grid; gap: .25em; } .avance-lista .avance-lista { margin-top: .2em; list-style: none; padding-left: .8em; opacity: .9; font-size: .9em; }
 .esc-avance .esc-btn-grande { align-self: center; }
+
+/* Botón de audio dentro de las tarjetas */
+.celda-aud { background: rgba(0,0,0,.25); color: #fff; border: none; border-radius: 50%; width: 1.9em; height: 1.9em; font-size: .7em; line-height: 1; padding: 0; margin-top: .2em; }
+.celda-aud:hover { background: rgba(0,0,0,.5); }

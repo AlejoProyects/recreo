@@ -23,7 +23,7 @@ const cuestionario = {
       const q = qs[i];
       h.progreso(i, qs.length);
       caja.append(
-        el('div', { class: 'quiz-q e-card' }, [celda(q.q, q.img)]),
+        el('div', { class: 'quiz-q e-card' }, [celda(q.q, q.img, '', q.aud)]),
         el('div', { class: 'quiz-r n' + Math.min(q.resp.length, 6) }, q.resp.map((r, k) =>
           el('button', { class: 'e-btn', text: (h.opciones.letras === 'ninguno' ? '' : 'ABCDEF'[k] + ') ') + r.t, on: { click: (ev) => responder(r, ev.currentTarget, q) } })))
       );
@@ -65,7 +65,7 @@ const rueda = {
   opciones: [{ k: 'potencia', etiqueta: 'Potencia de giro', tipo: 'opcion', def: 'media', opciones: [{ v: 'baja', t: 'Baja' }, { v: 'media', t: 'Media' }, { v: 'alta', t: 'Alta' }] }],
   montar(h) {
     const T = temporizadores();
-    let items = h.datos.map((x) => ({ t: x.t ?? x.a ?? x.q ?? x.nombre ?? '', img: x.img ?? x.imgA ?? null }));
+    let items = h.datos.map((x) => ({ t: x.t ?? x.a ?? x.q ?? x.nombre ?? '', img: x.img ?? x.imgA ?? null, aud: x.aud ?? x.audA ?? null }));
     let angulo = 0, zoom = 1, fase = 'reposo', elegido = -1;
     const cont = el('div', { class: 'rueda' });
     const canvas = el('canvas', { class: 'rueda-canvas' });
@@ -217,7 +217,7 @@ const abrecajas = {
   acepta: ['lista', 'pares', 'quiz', 'grupos', 'oraciones'], minimo: 2, imprimible: false,
   opciones: [OPC.alea(true, 'Elementos en orden aleatorio')],
   montar(h) {
-    let items = h.datos.map((x) => ({ t: x.t ?? x.a ?? x.q ?? x.nombre ?? '', img: x.img ?? x.imgA ?? null }));
+    let items = h.datos.map((x) => ({ t: x.t ?? x.a ?? x.q ?? x.nombre ?? '', img: x.img ?? x.imgA ?? null, aud: x.aud ?? x.audA ?? null }));
     if (h.opciones.alea) items = barajar(items);
     let abiertas = 0;
     const cols = Math.ceil(Math.sqrt(items.length * 1.6));
@@ -233,7 +233,7 @@ const abrecajas = {
       if (b.classList.contains('abierta')) return;
       b.classList.add('abierta'); abiertas++; h.sonido.acierto(); h.acierto(0, { sonar: false }); h.progreso(abiertas, items.length);
       limpiar(reveal); reveal.hidden = false;
-      reveal.append(el('div', { class: 'e-card cajas-card' }, [celda(it.t, it.img)]), el('small', { text: 'Toca para continuar' }));
+      reveal.append(el('div', { class: 'e-card cajas-card' }, [celda(it.t, it.img, '', it.aud)]), el('small', { text: 'Toca para continuar' }));
       reveal.onclick = () => { reveal.hidden = true; if (abiertas >= items.length) h.terminar(); };
     }
     return {};
@@ -247,7 +247,7 @@ const cartas = {
   acepta: ['lista', 'pares', 'quiz', 'grupos', 'oraciones'], minimo: 1, imprimible: false,
   opciones: [{ k: 'repetir', etiqueta: 'Volver a barajar al terminar el mazo', tipo: 'check', def: false }],
   montar(h) {
-    const todos = h.datos.map((x) => ({ t: x.t ?? x.a ?? x.q ?? x.nombre ?? '', img: x.img ?? x.imgA ?? null }));
+    const todos = h.datos.map((x) => ({ t: x.t ?? x.a ?? x.q ?? x.nombre ?? '', img: x.img ?? x.imgA ?? null, aud: x.aud ?? x.audA ?? null }));
     let mazo = barajar(todos), vistas = 0;
     const cont = el('div', { class: 'cartas' });
     const carta = el('div', { class: 'carta' }, [el('div', { class: 'carta-dorso e-card', text: '?' }), el('div', { class: 'carta-cara e-card' })]);
@@ -262,7 +262,7 @@ const cartas = {
       const c = mazo.pop(); vistas++;
       carta.classList.remove('vuelta');
       setTimeout(() => {
-        const cara = carta.querySelector('.carta-cara'); limpiar(cara); cara.append(celda(c.t, c.img));
+        const cara = carta.querySelector('.carta-cara'); limpiar(cara); cara.append(celda(c.t, c.img, '', c.aud));
         carta.classList.add('vuelta'); h.sonido.clic(); h.acierto(0, { sonar: false });
         pintarInfo();
         if (!mazo.length && !h.opciones.repetir) btn.textContent = 'Terminar';

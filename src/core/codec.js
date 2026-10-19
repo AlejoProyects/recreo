@@ -17,7 +17,7 @@ export const paquete = (act) => Object.fromEntries(CAMPOS.map((k) => [k, act[k]]
 
 // Quita imágenes (las más pesadas) para que el enlace sea corto.
 export function sinImagenes(act) {
-  return JSON.parse(JSON.stringify(paquete(act), (k, v) => (typeof v === 'string' && v.startsWith('data:image') ? null : v)));
+  return JSON.parse(JSON.stringify(paquete(act), (k, v) => (typeof v === 'string' && (v.startsWith('data:image') || v.startsWith('data:audio')) ? null : v)));
 }
 
 export async function codificar(obj) {
