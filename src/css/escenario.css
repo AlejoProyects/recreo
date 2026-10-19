@@ -333,3 +333,4 @@
 .esc-revision ul { list-style: none; display: grid; gap: .25em; margin-top: .3em; }
 .esc-revision li { display: flex; flex-direction: column; } .esc-revision li small { opacity: .85; }
 .esc-revision .bien span { color: #7dff9b; } .esc-revision .mal span { color: #ff9b9b; }
+.rueda-detalle { position: absolute; top: 9%; left: 50%; transform: translateX(-50%); max-width: 62%; padding: .5em 1.1em; font-size: 1.2em; font-weight: 700; text-align: center; z-index: 3; animation: aparece .3s; }

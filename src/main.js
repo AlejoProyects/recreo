@@ -11,6 +11,7 @@ import { vistaActividad, vistaEjemplo, vistaCompartida, vistaIncrustada } from '
 import { vistaComunidad } from './ui/comunidad.js';
 import { vistaResultados } from './ui/resultados.js';
 import { vistaFunciones } from './ui/funciones.js';
+import { vistaListas } from './ui/listas.js';
 import { vistaMis } from './ui/mis.js';
 
 ruta('/', vistaInicio);
@@ -25,5 +26,6 @@ ruta('/c/:data', vistaCompartida);
 ruta('/embed/:data', vistaIncrustada);
 ruta('/resultados', vistaResultados);
 ruta('/funciones', vistaFunciones);
+ruta('/listas', vistaListas);
 
 iniciarRouter(document.getElementById('app'));

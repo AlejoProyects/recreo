@@ -13,6 +13,7 @@ import { compartir, incrustar, imprimir, definirTarea } from './acciones.js';
 import { decodificar, paquete } from '../core/codec.js';
 import { EJEMPLOS } from '../datos/ejemplos.js';
 import { copiarActividad } from './mis.js';
+import { leerListas, urlItem, titulosDe, tarjetaLista } from './listas.js';
 
 const conDefectos = (a) => {
   const p = plantillaPorId(a.plantilla);
@@ -20,7 +21,7 @@ const conDefectos = (a) => {
 };
 
 // Construye la página de una actividad. modo: 'propia' | 'ajena' (ejemplo o recibida por enlace)
-function construir(raiz, act, { modo }) {
+function construir(raiz, act, { modo, consulta = null }) {
   const main = pagina(raiz);
   const propia = modo === 'propia';
   let plantilla = plantillaPorId(act.plantilla);
@@ -58,6 +59,7 @@ function construir(raiz, act, { modo }) {
   function pintarLateral() {
     limpiar(lateral);
     lateral.append(
+      ...(propia || String(act.id).startsWith('ej-') ? [tarjetaLista(act, !propia)] : []),
       panelPlantillas(act, cambiarPlantilla),
       panelEstilo(act, () => { guardar(); if (ctl) ctl.setEstilo(act.estilo, act.fuente); })
     );
@@ -97,8 +99,18 @@ function construir(raiz, act, { modo }) {
     el('button', { class: 'btn btn-mini', text: 'Guardar una copia para editarla', on: { click: async () => { const c = await copiarActividad(conDefectos({ ...paquete(act), id: uid() })); aviso('Copia guardada en Mis actividades'); ir('/editar/' + c.id); } } })
   ]) : null;
 
+  // Si se llegó desde una lista de reproducción, barra para pasar a la anterior / siguiente actividad.
+  const lista = consulta && consulta.get('lista') ? leerListas().find((l) => l.id === consulta.get('lista')) : null;
+  const posLista = lista ? +consulta.get('n') || 0 : 0;
+  const barraLista = lista ? el('div', { class: 'barra-lista' }, [
+    el('b', { text: `Lista "${lista.nombre}" · ${posLista + 1} de ${lista.items.length}` }), el('span', { class: 'esp' }),
+    posLista > 0 ? el('a', { class: 'btn btn-claro btn-mini', text: '◀ Anterior', attrs: { href: urlItem(lista.items[posLista - 1], lista, posLista - 1) } }) : null,
+    posLista < lista.items.length - 1 ? el('a', { class: 'btn btn-mini', text: 'Siguiente ▶', attrs: { href: urlItem(lista.items[posLista + 1], lista, posLista + 1) } }) : el('a', { class: 'btn btn-claro btn-mini', text: 'Fin de la lista', attrs: { href: '#/listas' } })
+  ]) : null;
+
   main.append(el('div', { class: 'actividad' }, [
     el('div', { class: 'col-juego' }, [
+      barraLista,
       aviso_ajena,
       el('div', { class: 'tarjeta tarjeta-juego' }, [
         zonaJuego,
@@ -128,20 +140,20 @@ function construir(raiz, act, { modo }) {
   return () => { if (ctl) ctl.destruir(); };
 }
 
-export async function vistaActividad(raiz, params) {
+export async function vistaActividad(raiz, params, consulta) {
   const act = await actividades.uno(params.id);
   if (!act) {
     const main = pagina(raiz);
     main.append(el('div', { class: 'tarjeta' }, [el('h2', { text: 'Actividad no encontrada' }), el('p', { class: 'sub', text: 'Puede que se haya eliminado o que sea de otro dispositivo.' }), el('a', { class: 'btn', text: 'Ir a mis actividades', attrs: { href: '#/mis' } })]));
     return;
   }
-  return construir(raiz, conDefectos(act), { modo: 'propia' });
+  return construir(raiz, conDefectos(act), { modo: 'propia', consulta });
 }
 
-export function vistaEjemplo(raiz, params) {
+export function vistaEjemplo(raiz, params, consulta) {
   const e = EJEMPLOS.find((x) => x.id === params.id);
   if (!e) { ir('/comunidad'); return; }
-  return construir(raiz, conDefectos(JSON.parse(JSON.stringify(e))), { modo: 'ajena' });
+  return construir(raiz, conDefectos(JSON.parse(JSON.stringify(e))), { modo: 'ajena', consulta });
 }
 
 async function leer(data) {

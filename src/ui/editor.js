@@ -47,6 +47,18 @@ function botonImagen(obj, clave, onCambio) {
   return b;
 }
 
+export const MAX_FILAS = 50;
+
+// Subir, bajar, duplicar y eliminar una fila del contenido.
+const filaAcciones = (c, i, repintar) => {
+  const b = (txt, titulo, fn, desactivado = false) => el('button', { class: 'ed-mini', attrs: { type: 'button', title: titulo, disabled: desactivado }, text: txt, on: { click: fn } });
+  return el('div', { class: 'ed-acc' }, [
+    b('\u25B2', 'Subir', () => { [c[i - 1], c[i]] = [c[i], c[i - 1]]; repintar(); }, i === 0),
+    b('\u25BC', 'Bajar', () => { [c[i + 1], c[i]] = [c[i], c[i + 1]]; repintar(); }, i === c.length - 1),
+    b('\u29C9', 'Duplicar', () => { if (c.length >= MAX_FILAS) return aviso(`Máximo ${MAX_FILAS} elementos`); const k = JSON.parse(JSON.stringify(c[i])); k.id = uid(); c.splice(i + 1, 0, k); repintar(); }),
+    b('\u2715', 'Eliminar', () => { c.splice(i, 1); repintar(); })
+  ]);
+};
 const quitar = (fn) => el('button', { class: 'ed-quitar', attrs: { type: 'button', title: 'Eliminar' }, text: '✕', on: { click: fn } });
 
 // ---------------------------------------------------------------------------
@@ -70,31 +82,31 @@ const EDITORES = {
           ])),
           q.resp.length < 6 ? el('button', { class: 'enlace-btn', attrs: { type: 'button' }, text: '+ Respuesta', on: { click: () => { q.resp.push({ t: '', ok: false }); repintar(); } } }) : null
         ]),
-        quitar(() => { c.splice(qi, 1); repintar(); })
+        filaAcciones(c, qi, repintar)
       ]));
     });
   },
   pares(c, host, repintar) {
-    host.append(el('div', { class: 'ed-cab' }, [el('span'), el('b', { text: 'Término / pregunta' }), el('b', { text: 'Definición / respuesta' }), el('span')]));
+    host.append(el('div', { class: 'ed-cab' }, [el('span'), el('b', { text: cabPares[0] }), el('b', { text: cabPares[1] }), el('span')]));
     c.forEach((p, i) => host.append(el('div', { class: 'ed-fila ed-par' }, [
       el('span', { class: 'ed-n', text: String(i + 1) }),
       el('div', { class: 'ed-linea' }, [el('input', { attrs: { type: 'text' }, value: p.a, on: { input: (e) => { p.a = e.target.value; } } }), botonAudio(p, 'audA'), botonImagen(p, 'imgA')]),
       el('div', { class: 'ed-linea' }, [el('input', { attrs: { type: 'text' }, value: p.b, on: { input: (e) => { p.b = e.target.value; } } }), botonAudio(p, 'audB'), botonImagen(p, 'imgB')]),
-      quitar(() => { c.splice(i, 1); repintar(); })
+      filaAcciones(c, i, repintar)
     ])));
   },
   lista(c, host, repintar) {
     c.forEach((it, i) => host.append(el('div', { class: 'ed-fila' }, [
       el('span', { class: 'ed-n', text: String(i + 1) }),
       el('div', { class: 'ed-linea ed-cuerpo' }, [el('input', { attrs: { type: 'text' }, value: it.t, on: { input: (e) => { it.t = e.target.value; } } }), botonAudio(it, 'aud'), botonImagen(it, 'img')]),
-      quitar(() => { c.splice(i, 1); repintar(); })
+      filaAcciones(c, i, repintar)
     ])));
   },
   oraciones(c, host, repintar) {
     c.forEach((it, i) => host.append(el('div', { class: 'ed-fila' }, [
       el('span', { class: 'ed-n', text: String(i + 1) }),
       el('div', { class: 'ed-linea ed-cuerpo' }, [el('input', { attrs: { type: 'text', placeholder: 'Ej.: El [sol] sale por el [este]' }, value: it.t, on: { input: (e) => { it.t = e.target.value; } } })]),
-      quitar(() => { c.splice(i, 1); repintar(); })
+      filaAcciones(c, i, repintar)
     ])));
   },
   vf(c, host, repintar) {
@@ -105,14 +117,14 @@ const EDITORES = {
         el('select', { class: 'ed-vf', on: { change: (e) => { it.ok = e.target.value === '1'; } } }, [
           el('option', { attrs: { value: '1', selected: it.ok }, text: 'Verdadero' }), el('option', { attrs: { value: '0', selected: !it.ok }, text: 'Falso' })])
       ]),
-      quitar(() => { c.splice(i, 1); repintar(); })
+      filaAcciones(c, i, repintar)
     ])));
   },
   grupos(c, host, repintar) {
     c.forEach((g, i) => host.append(el('div', { class: 'ed-grupo' }, [
       el('div', { class: 'ed-linea' }, [
         el('input', { attrs: { type: 'text', placeholder: 'Nombre del grupo' }, value: g.nombre, on: { input: (e) => { g.nombre = e.target.value; } } }),
-        quitar(() => { c.splice(i, 1); repintar(); })
+        filaAcciones(c, i, repintar)
       ]),
       el('textarea', { attrs: { rows: 4, placeholder: 'Un elemento por línea' }, value: g.items.map((x) => x.t).join('\n'),
         on: { input: (e) => { g.items = e.target.value.split('\n').map((t) => ({ t, img: null })); } } })
@@ -171,10 +183,16 @@ function dialogoImportar(tipo, alAceptar) {
   area.focus();
 }
 
+let cabPares = ['Término / pregunta', 'Definición / respuesta'];
+let borrador = null; // conserva lo escrito al cambiar de variante (se re-pinta la vista)
+
 export async function vistaEditor(raiz, params) {
   const main = pagina(raiz);
   let act = null, plantilla = null;
-  if (params.id) {
+  const previo = borrador; borrador = null;
+  if (previo && (params.id ? previo.id === params.id : previo.nuevo && previo.plantilla === params.plantilla)) {
+    act = previo; plantilla = plantillaPorId(act.plantilla);
+  } else if (params.id) {
     act = await actividades.uno(params.id);
     if (!act) { ir('/mis'); return; }
     plantilla = plantillaPorId(act.plantilla);
@@ -188,6 +206,7 @@ export async function vistaEditor(raiz, params) {
       creado: Date.now(), modificado: Date.now(), nuevo: true
     };
   }
+  cabPares = plantilla.id === 'rueda' ? ['Texto en la rueda', 'Pregunta que aparece al salir'] : ['Término / pregunta', 'Definición / respuesta'];
   const tipo = act.tipo;
   const c = act.contenido;
   const filas = el('div', { class: 'ed-lista' });
@@ -198,7 +217,8 @@ export async function vistaEditor(raiz, params) {
 
   const esLista = Array.isArray(c);
   const barra = el('div', { class: 'fila' }, [
-    esLista ? el('button', { class: 'btn btn-claro', attrs: { type: 'button' }, text: '+ Añadir', on: { click: () => { c.push(nuevoItem[tipo]()); pintar(); } } }) : null,
+    esLista ? el('button', { class: 'btn btn-claro', attrs: { type: 'button' }, text: '+ Añadir', on: { click: () => { if (c.length >= MAX_FILAS) return aviso(`Máximo ${MAX_FILAS} elementos`); c.push(nuevoItem[tipo]()); pintar(); } } }) : null,
+    esLista ? el('small', { class: 'sub', text: `mín. ${plantilla.minimo || 1} · máx. ${MAX_FILAS}` }) : null,
     esLista && ['pares', 'lista', 'oraciones', 'vf'].includes(tipo) ? el('button', { class: 'btn btn-claro', attrs: { type: 'button' }, text: 'Importar texto', on: { click: () => dialogoImportar(tipo, (txt) => {
       const nuevos = txt.split('\n').map((l) => l.trim()).filter(Boolean).map((l) => {
         const it = nuevoItem[tipo]();
@@ -218,17 +238,45 @@ export async function vistaEditor(raiz, params) {
     const n = cuenta(tipo, c);
     if (n < (plantilla.minimo || 1)) { aviso(`Esta plantilla necesita al menos ${plantilla.minimo || 1} elemento(s) completos. Tienes ${n}.`); return; }
     act.titulo = act.titulo.trim() || plantilla.nombre;
+    // historial: guarda la versión anterior si algo cambió (máx. 8)
+    const previa = act.nuevo ? null : await actividades.uno(act.id);
+    if (previa && (JSON.stringify(previa.contenido) !== JSON.stringify(act.contenido) || previa.titulo !== act.titulo)) {
+      act.versiones = [{ fecha: previa.modificado, titulo: previa.titulo, tipo: previa.tipo, contenido: previa.contenido }, ...(previa.versiones || [])].slice(0, 8);
+    }
     act.modificado = Date.now();
     delete act.nuevo;
     await actividades.guardar(act);
     ir('/a/' + act.id);
   }
 
+  const verHistorial = () => {
+    const fondo = el('div', { class: 'modal-fondo', on: { click: (e) => { if (e.target === fondo) fondo.remove(); } } }, [el('div', { class: 'modal' }, [
+      el('h2', { text: 'Historial de versiones' }),
+      el('p', { class: 'sub', text: 'Se conservan las últimas versiones guardadas. Al restaurar una, vuelve al editor para revisarla antes de guardar.' }),
+      ...act.versiones.map((v) => el('div', { class: 'lista-fila' }, [
+        el('span', { text: new Date(v.fecha).toLocaleString('es') }), el('b', { text: v.titulo }), el('span', { class: 'sub', text: `${cuenta(v.tipo, v.contenido)} elementos` }), el('span', { class: 'esp' }),
+        el('button', { class: 'btn btn-mini', text: 'Restaurar', on: { click: () => { act.contenido = JSON.parse(JSON.stringify(v.contenido)); act.tipo = v.tipo; act.titulo = v.titulo; borrador = act; fondo.remove(); limpiar(raiz); vistaEditor(raiz, params); } } })])),
+      el('div', { class: 'acciones' }, [el('button', { class: 'btn btn-claro', text: 'Cerrar', on: { click: () => fondo.remove() } })])
+    ])]);
+    document.body.appendChild(fondo);
+  };
+  const variantes = plantilla.variantes ? el('div', { class: 'ed-variantes' }, plantilla.variantes.map((v) => el('label', { class: 'chk' }, [
+    el('input', { attrs: { type: 'radio', name: 'variante' }, checked: v.tipo === tipo, on: { change: () => {
+      if (v.tipo === tipo) return;
+      const it = c.filter((x) => (x.t || x.a || x.q || '').trim());
+      act.contenido = v.tipo === 'pares'
+        ? it.map((x) => ({ id: x.id || uid(), a: x.t || '', b: '', imgA: x.img || null, imgB: null, audA: x.aud || null }))
+        : it.map((x) => ({ id: x.id || uid(), t: x.a || '', img: x.imgA || null, aud: x.audA || null }));
+      if (!act.contenido.length) act.contenido = contenidoVacio(v.tipo, 6);
+      act.tipo = v.tipo; borrador = act; limpiar(raiz); vistaEditor(raiz, params);
+    } } }), ' ' + v.nombre]))) : null;
+
   main.append(
     pasos(2),
     el('div', { class: 'tarjeta' }, [
-      el('div', { class: 'fila' }, [iconoPlantilla(plantilla), el('div', {}, [el('h2', { text: plantilla.nombre }), el('p', { class: 'sub', text: plantilla.descripcion })])]),
-      el('div', { class: 'ed-meta' }, [el('label', { class: 'campo', text: 'Título' }), titulo, el('label', { class: 'campo', text: 'Etiquetas', style: { marginTop: '10px' } }), etiquetas])
+      el('div', { class: 'fila' }, [iconoPlantilla(plantilla), el('div', {}, [el('h2', { text: plantilla.nombre }), el('p', { class: 'sub', text: plantilla.descripcion })]), el('span', { class: 'esp' }),
+        act.versiones && act.versiones.length ? el('button', { class: 'btn btn-claro btn-mini', text: '↺ Historial', on: { click: verHistorial } }) : null]),
+      el('div', { class: 'ed-meta' }, [el('label', { class: 'campo', text: 'Título' }), titulo, variantes, el('label', { class: 'campo', text: 'Etiquetas', style: { marginTop: '10px' } }), etiquetas])
     ]),
     el('div', { class: 'tarjeta' }, [el('div', { class: 'fila entre' }, [el('h3', { text: TIPOS[tipo].nombre }), el('span', { class: 'sub', text: TIPOS[tipo].ayuda })]), filas, barra])
   );

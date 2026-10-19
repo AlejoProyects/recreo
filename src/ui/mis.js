@@ -98,6 +98,7 @@ export async function vistaMis(raiz) {
   main.append(el('div', { class: 'tarjeta' }, [
     el('div', { class: 'fila entre' }, [el('h2', { text: 'Mis actividades' }), el('div', { class: 'fila' }, [
       el('button', { class: 'btn btn-claro', text: 'Nueva carpeta', on: { click: () => { const n = (prompt('Nombre de la carpeta:') || '').trim().slice(0, 40); if (!n) return; const l = carpetasGuardadas(); if (!l.includes(n)) pref.guardar('carpetas', [...l, n]); carpeta = n; papelera = false; pintar(); } } }),
+      el('a', { class: 'btn btn-claro', text: 'Listas de reproducción', attrs: { href: '#/listas' } }),
       el('button', { class: 'btn btn-claro', text: 'Importar archivo', on: { click: async () => { if (await importarArchivo()) { aviso('Actividad importada'); cargar(); } } } }),
       el('a', { class: 'btn', text: '+ Crear actividad', attrs: { href: '#/crear' } })])]),
     el('div', { class: 'fila', style: { margin: '14px 0' } }, [el('div', { style: { flex: 1, minWidth: '200px' } }, [el('input', { attrs: { type: 'search', placeholder: 'Buscar en mis actividades…' }, on: { input: (e) => { q = e.target.value; pintar(); } } })]), el('label', { class: 'sub', text: 'Ordenar por:' }), selOrden]),

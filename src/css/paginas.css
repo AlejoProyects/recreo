@@ -153,3 +153,11 @@
 .ed-rec { background: #ff4d4d !important; color: #fff; border: none !important; animation: pulso-rec 1s infinite alternate; }
 @keyframes pulso-rec { to { opacity: .55; } }
 .ed-aud-x { width: 22px; height: 22px; font-size: 12px; margin-left: -6px; }
+.ed-acc { display: flex; gap: 2px; flex: none; align-items: center; }
+.ed-mini { background: none; border: none; color: #8a97a2; width: 26px; height: 32px; font-size: 14px; }
+.ed-mini:hover:not(:disabled) { color: var(--azul-osc); background: var(--azul-claro); }
+.ed-mini:disabled { opacity: .3; cursor: default; }
+.ed-variantes { display: flex; gap: 18px; margin-top: 12px; flex-wrap: wrap; }
+.barra-lista { background: #e8f6e8; border: 1px solid #b6dfb6; padding: 8px 16px; margin-bottom: 14px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.lista-fila { display: flex; gap: 10px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--linea); }
+.lista-fila .plt-ico { width: 36px; height: 36px; }

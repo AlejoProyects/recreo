@@ -16,6 +16,8 @@ Funciona 100 % en el navegador: no hay servidor, cuentas ni límites de uso. El 
 - **Configuración de actividad** como en el original: cronómetro (ninguno / hacia adelante / cuenta atrás), control del ritmo, maestría (incluye *Mostrar respuestas al final*), anti-trampas (barajar y pantalla borrosa), formato y modo, con *Aplicar*, *Definir como predeterminado para la plantilla* y *Volver al predeterminado*.
 - **Mis actividades** con carpetas, papelera de reciclaje (30 días) y orden por nombre, modificadas o última vez jugada.
 - **Publicar**: franja de edad, asignatura y tema; la Comunidad filtra por esas etiquetas.
+- Editor con subir/bajar/duplicar/eliminar filas, límites mín./máx., **historial de versiones** y variante **Rueda con preguntas**.
+- **Listas de reproducción**: juega varias actividades en secuencia (Anterior/Siguiente).
 - Pantalla de inicio con **Avance** (vista previa del contenido) y **Juego**.
 - **Imprimir** cualquier actividad (hoja limpia; crucigrama y sopa de letras con su propia hoja).
 - **Compartir** por enlace (el contenido viaja comprimido dentro del enlace) o por archivo, **incrustar** con `<iframe>`.

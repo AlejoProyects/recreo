@@ -63,20 +63,22 @@ const POTENCIA = { baja: { s: 4, v: 3 }, media: { s: 6, v: 5 }, alta: { s: 8, v:
 const rueda = {
   id: 'rueda', nombre: 'Rueda aleatoria', icono: '🎡', color: '#f4a261',
   descripcion: 'Gira la rueda para ver qué elemento aparece a continuación.',
+  variantes: [{ tipo: 'lista', nombre: 'Rueda simple' }, { tipo: 'pares', nombre: 'Rueda con preguntas' }],
   acepta: ['lista', 'pares', 'quiz', 'grupos', 'oraciones'], minimo: 2, imprimible: false,
   opciones: [{ k: 'potencia', etiqueta: 'Potencia de giro', tipo: 'opcion', def: 'media', opciones: [{ v: 'baja', t: 'Baja' }, { v: 'media', t: 'Media' }, { v: 'alta', t: 'Alta' }] }],
   montar(h) {
     const T = temporizadores();
-    let items = h.datos.map((x) => ({ t: x.t ?? x.a ?? x.q ?? x.nombre ?? '', img: x.img ?? x.imgA ?? null, aud: x.aud ?? x.audA ?? null }));
+    let items = h.datos.map((x) => ({ t: x.t ?? x.a ?? x.q ?? x.nombre ?? '', img: x.img ?? x.imgA ?? null, aud: x.aud ?? x.audA ?? null, det: h.tipo === 'pares' ? x.b : null }));
     let angulo = 0, zoom = 1, fase = 'reposo', elegido = -1;
     const cont = el('div', { class: 'rueda' });
     const canvas = el('canvas', { class: 'rueda-canvas' });
     const pista = el('div', { class: 'rueda-pista', text: 'Arrastra la rueda para girarla' });
     const botones = el('div', { class: 'rueda-botones' });
+    const detalle = el('div', { class: 'rueda-detalle e-card', attrs: { hidden: true } });
     const bGirar = el('button', { class: 'rueda-b', text: 'Girar', on: { click: () => girar() } });
     const bReanudar = el('button', { class: 'rueda-b', text: 'Reanudar', on: { click: () => volver() } });
     const bEliminar = el('button', { class: 'rueda-b', text: 'Eliminar', on: { click: eliminar } });
-    cont.append(canvas, pista, botones);
+    cont.append(canvas, pista, detalle, botones);
     h.raiz.appendChild(cont);
     const pintarBotones = () => { limpiar(botones); botones.append(...(fase === 'zoom' && !bloqueado ? [bReanudar, bEliminar] : fase === 'reposo' ? [bGirar] : [])); pista.hidden = fase !== 'reposo'; };
     let bloqueado = true;
@@ -153,7 +155,7 @@ const rueda = {
     function girar(potencia) {
       if (fase !== 'reposo' || items.length < 2) return;
       const P = POTENCIA[potencia || h.opciones.potencia || 'media'] || POTENCIA.media;
-      fase = 'girando'; elegido = -1; pintarBotones();
+      fase = 'girando'; elegido = -1; detalle.hidden = true; pintarBotones();
       const n = items.length, a = (Math.PI * 2) / n, objetivo = Math.floor(Math.random() * n);
       // el centro del sector `objetivo` debe quedar en el puntero (ángulo π, a la izquierda)
       const base = Math.PI - (objetivo * a + a / 2);
@@ -174,14 +176,15 @@ const rueda = {
       const zmax = Math.min(5, Math.max(1.7, (H * 0.95) / (2 * R * Math.sin(Math.min(a / 2, Math.PI / 2)))));
       await animar(1, zmax, 2000, (v) => { zoom = v; dibujar(); });
       bloqueado = false; pintarBotones();
+      if (items[k] && items[k].det) { detalle.textContent = items[k].det; detalle.hidden = false; }
     }
     async function volver() {
-      if (bloqueado) return; bloqueado = true; limpiar(botones);
+      if (bloqueado) return; bloqueado = true; limpiar(botones); detalle.hidden = true;
       await animar(zoom, 1, 700, (v) => { zoom = v; dibujar(); });
       elegido = -1; fase = 'reposo'; dibujar(); pintarBotones();
     }
     async function eliminar() {
-      if (bloqueado) return; bloqueado = true; limpiar(botones);
+      if (bloqueado) return; bloqueado = true; limpiar(botones); detalle.hidden = true;
       const k = elegido;
       await animar(zoom, 1, 600, (v) => { zoom = v; dibujar(); });
       items = items.filter((_, j) => j !== k); elegido = -1; fase = 'reposo';
